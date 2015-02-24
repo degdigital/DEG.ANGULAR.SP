@@ -4,5 +4,8 @@
     <ProjectItemFile Source="Elements.xml" Target="AngularSP\" Type="ElementManifest" />
     <ProjectItemFile Source="AngularSP.Factory.js" Target="AngularSP\" Type="ElementFile" />
     <ProjectItemFile Source="lib\angular.min.js" Target="AngularSP\lib\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\jquery-1.10.2.min.js" Target="AngularSP\lib\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\jquery-1.10.2.min.js.map" Target="AngularSP\lib\" Type="ElementFile" />
+    <ProjectItemFile Source="AngularSP.Directives.js" Target="AngularSP\" Type="ElementFile" />
   </Files>
 </ProjectItem>

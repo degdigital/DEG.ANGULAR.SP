@@ -1,9 +1,21 @@
 ﻿{
-    "Title": {},
+    "Title": {
+        "Type": "text"
+    },
 	"RichTextColumn": {
-	    "DisplayName": "RichTextColumn",
-        "Group": "AngularSPTest",
+	    "Group": "AngularSPTest",
 		"Type": "multiText",
 		"InputType": "nicEdit"
-	}
+	},
+    "ChoiceColumn": {
+        "Type": "choice",
+        "InputType": "dropDown"
+    },
+    "MetadataColumn": {
+        "Type": "metadata",
+        "InputType": "dropDown"
+    },
+    "NumberColumn": {
+        "Type": "number"
+    }
 }

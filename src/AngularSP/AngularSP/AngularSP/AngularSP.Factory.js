@@ -1,6 +1,6 @@
 ﻿'use strict';
 
-(function (ng) {
+(function (ng, $) {
 
     ng.module("angularSP", [])
         .factory("spListFactory", ['$q', spListFactory]);
@@ -39,6 +39,8 @@
             cTypesInfo = ng.copy(cTypeDefs);
             listsInfo = ng.copy(listDefs);
 
+            cascadeColumnProperties(columnsInfo, cTypesInfo, listsInfo);
+
             var initDeferred = $q.defer();
 
             SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
@@ -56,21 +58,35 @@
 
                 context.load(web, "ServerRelativeUrl");
 
-                var columnFieldData = loadSiteColumnProperties(columnDefs);
+                //var columnFieldData = loadSiteColumnProperties(columnDefs);
                 var listFieldData = loadListInfoProperties(listDefs);
 
                 context.executeQueryAsync(success, failure);
 
                 function success() {
                     serverRelativeUrl = web.get_serverRelativeUrl();
-                    setSiteColumnProperties(columnsInfo, columnFieldData);
-                    setListInfoProperties(listsInfo, listFieldData);
-                    console.log(columnsInfo);
-                    console.log(listsInfo);
-                    initDeferred.resolve();
+                    //setSiteColumnProperties(columnsInfo, columnFieldData);
+                    var fieldLookups = setListInfoProperties(listsInfo, listFieldData);
+
+                    context.executeQueryAsync(lookupsSuccess, lookupsFailure);
+
+                    function lookupsSuccess() {
+                        fieldLookups.forEach(function (fieldLookup) {
+                            fieldLookup.Callback(fieldLookup.Column, fieldLookup.RawResults);
+                        });
+                        console.log(listsInfo);
+                        initDeferred.resolve();
+                    }
+
+                    function lookupsFailure(sender, args) {
+                        console.log(args.get_message());
+                        initDeferred.reject(args.get_message());
+                    }
+
                 }
 
                 function failure(sender, args) {
+                    console.log(args.get_message());
                     initDeferred.reject(args.get_message());
                 }
             }
@@ -133,6 +149,43 @@
 
         /**/
 
+        function cascadeColumnProperties(columnsInfo, cTypesInfo, listsInfo) {
+            cascadeListsInfoProperties(columnsInfo, listsInfo);
+        }
+
+        function cascadeListsInfoProperties(columnsInfo, listsInfo) {
+            for (var listName in listsInfo) {
+                if (listsInfo.hasOwnProperty(listName)) {
+                    var listColumns = listsInfo[listName].Columns;
+                    if (listColumns !== undefined) {
+                        cascadeListInfoColumnProperties(columnsInfo, listColumns);
+                    }
+                }
+            }
+        }
+
+        function cascadeListInfoColumnProperties(columnsInfo, listColumns) {
+            for (var columnName in listColumns) {
+                if (listColumns.hasOwnProperty(columnName)) {
+                    var column = listColumns[columnName];
+                    var columnInfo = columnsInfo[columnName];
+                    if (columnInfo !== undefined) {
+                        cascadeProperties(columnInfo, column);
+                    }
+                }
+            }
+        }
+
+        function cascadeProperties(columnFrom, columnTo) {
+            for (var propertyName in columnFrom) {
+                if (columnFrom.hasOwnProperty(propertyName)) {
+                    if (columnTo[propertyName] === undefined) {
+                        columnTo[propertyName] = columnFrom[propertyName];
+                    }
+                }
+            }
+        }
+
         function loadSiteColumnProperties(columnDefs) {
             var fieldData = [];
             var context = SP.ClientContext.get_current();
@@ -149,13 +202,13 @@
         }
 
         function setSiteColumnProperties(columnsInfo, fieldData) {
-            var context = new SP.ClientContext.get_current();
+            var context = SP.ClientContext.get_current();
             for (var i = 0; i < fieldData.length; i++) {
                 var field = fieldData[i];
                 var internalName = field.get_internalName();
                 if (columnsInfo[internalName] !== undefined) {
                     var column = columnsInfo[internalName];
-                    setColumnInfo(column, field);
+                    setColumnInfo(column, field, 0);
                 }
                 else {
                     //Very strange error.
@@ -164,106 +217,204 @@
             }
         }
 
-        function setColumnInfo(column, field) {
+        function setColumnInfo(column, field, fieldLookups, lookupCount) {
+            var context = SP.ClientContext.get_current();
             column.IsRequired = field.get_required();
             column.SchemaXml = field.get_schemaXml();
             column.DefaultValue = field.get_defaultValue();
             column.Scope = field.get_scope();
+            column.FieldType = field.get_fieldTypeKind();
             switch (column.Type) {
                 case "text":
+                    if (column.FieldType === 2) {
+
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     break;
                 case "multiText":
+                    if (column.FieldType === 3) {
+
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     break;
                 case "choice":
-                    var choiceField = context.castTo(field, SP.FieldChoice);
-                    //req
-                    //choices
-                    //default
-                    //displayAs
+                    if (column.FieldType === 6) {
+                        var choiceField = context.castTo(field, SP.FieldChoice);
+                        column.Choices = choiceField.get_choices();
+                        column.FillInChoice = choiceField.get_fillInChoice();
+                        column.EditFormat = choiceField.get_editFormat();
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     break;
                 case "multiChoice":
-                    var choiceField = context.castTo(field, SP.FieldChoice);
-                    //req
-                    //choices
-                    //default
+                    if (column.FieldType === 15) {
+                        var multiChoiceField = context.castTo(field, SP.FieldMultiChoice);
+                        column.Choices = multiChoiceField.get_choices();
+                        column.FillInChoice = multiChoiceField.get_fillInChoice();
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     break;
                 case "lookup":
-                    //req
-                    //choices
+                    if (column.FieldType === 7) {
+                        var lookupField = context.castTo(field, SP.FieldLookup);
+                        var multiLookup = lookupField.get_allowMultipleValues();
+                        if (!multiLookup) {
+                            column.LookupField = lookupField.get_lookupField();
+                            column.LookupList = lookupField.get_lookupList();
+                            //column.LookupWeb = lookupField.get_lookupWebId().toString();
+                            var rawlookupItems = loadLookupOptions(column);
+                            fieldLookups.push({ Column: column, RawResults: rawlookupItems, Callback: setLookupOptions });
+                            lookupCount++;
+                        }
+                        else {
+                            console.log(field.get_title() + ": column type mismatch.");
+                        }
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     break;
                 case "multiLookup":
-                    //req
-                    //choices
+                    if (column.FieldType === 7) {
+                        var lookupField = context.castTo(field, SP.FieldLookup);
+                        var multiLookup = lookupField.get_allowMultipleValues();
+                        if (multiLookup) {
+                            column.LookupField = lookupField.get_lookupField();
+                            column.LookupList = lookupField.get_lookupList();
+                            //column.LookupWeb = lookupField.get_lookupWebId().toString();
+                            var rawlookupItems = loadLookupOptions(column);
+                            fieldLookups.push({ Column: column, RawResults: rawlookupItems, Callback: setLookupOptions });
+                            lookupCount++;
+                        }
+                        else {
+                            console.log(field.get_title() + ": column type mismatch.");
+                        }
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     break;
                 case "yesNo":
+                    if (column.FieldType === 8) {
+
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     break;
                 case "person":
-                    //req
+                    if (column.FieldType === 20) {
+                        lookupCount++;
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     //peopleOnly/peopleAndGroups
                     //chooseFrom(group)
                     //showField
                     break;
                 case "multiPerson":
-                    //req
+                    if (column.FieldType === 20) {
+                        lookupCount++;
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     //peopleOnly/peopleAndGroups
                     //chooseFrom(group)
                     //showField
                     break;
                 case "metadata":
-                    //req
-                    //choices
+                    if (column.FieldType === 0) {
+                        var schemaFieldType = parseMetadataSchema(column);
+                        if (schemaFieldType === "TaxonomyFieldType") {
+                            var rawTermSet = loadMetadataTerms(column);
+                            fieldLookups.push({ Column: column, RawResults: rawTermSet, Callback: setMetadataTerms });
+                            lookupCount++;
+                        }
+                        else {
+                            console.log(field.get_title() + ": column type mismatch.");
+                        }
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     //displayValue
                     //allowFillIn
                     //default
-                    //var termsPromise = getTermsForField(listName, columnName);
-                    //termsPromise.then(function (terms) {
-                    //    setTermsForField(column, terms);
-                    //}, function (reason) {
-
-                    //});
-                    //fieldPromises.push(termsPromise);
                     break;
                 case "multiMetadata":
-                    //req
-                    //choices
+                    if (column.FieldType === 0) {
+                        var schemaFieldType = parseMetadataSchema(column);
+                        if (schemaFieldType === "TaxonomyFieldTypeMulti") {
+                            var rawTermSet = loadMetadataTerms(column);
+                            fieldLookups.push({ Column: column, RawResults: rawTermSet, Callback: setMetadataTerms });
+                            lookupCount++;
+                        }
+                        else {
+                            console.log(field.get_title() + ": column type mismatch.");
+                        }
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     //displayValue
                     //allowFillIn
                     //default
-                    //var termsPromise = getTermsForField(listName, columnName);
-                    //termsPromise.then(function (terms) {
-                    //    setTermsForField(column, terms);
-                    //}, function (reason) {
-
-                    //});
-                    //fieldPromises.push(termsPromise);
                     break;
                 case "link":
-                    //req
+                    if (column.FieldType === 11) {
+
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     //format (hyperlink/picture)
                     break;
                 case "number":
-                    //req
-                    //default
+                    if (column.FieldType === 9) {
+
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     //minmax
                     //decimalplaces
                     //showaspercentage
                     break;
                 case "currency":
-                    //req
-                    //default
+                    if (column.FieldType === 10) {
+
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     //minmax
                     //decimalplaces
                     //format
                     break;
                 case "dateTime":
-                    //req
-                    //default
+                    if (column.FieldType === 4) {
+
+                    }
+                    else {
+                        console.log(field.get_title() + ": column type mismatch.");
+                    }
                     //format (dateOnly/dateTime) (standard/friendly)
                     break;
                 default:
                     //throw error.
                     break;
             }
+            return lookupCount;
         }
 
         function loadListInfoProperties(listDefs) {
@@ -300,7 +451,62 @@
             }
         }
 
+        function loadLookupOptions(column) {
+            var query = new SP.CamlQuery();
+            var context = SP.ClientContext.get_current();
+            var web = context.get_web();
+            var list = web.get_lists().getById(column.LookupList);
+            var lookupItems = list.getItems(query);
+            context.load(lookupItems);
+            return lookupItems;
+        }
+
+        function loadMetadataTerms(column) {
+            var context = SP.ClientContext.get_current();
+            var taxSession = SP.Taxonomy.TaxonomySession.getTaxonomySession(context);
+            var termStores = taxSession.get_termStores();
+            var termStore = termStores.getById(column.SspId);
+            var termSet = termStore.getTermSet(column.TermSetId);
+            var terms = termSet.getAllTerms();
+            context.load(terms);
+            return terms;
+        }
+
+        function setLookupOptions(column, lookupItems) {
+            column.LookupItems = [];
+            column.LookupItemsById = {};
+            column.LookupItemsByLabel = {};
+            var lookupItemsEnum = lookupItems.getEnumerator();
+            while (lookupItemsEnum.moveNext()) {
+                var lookupItem = lookupItemsEnum.get_current();
+                var lookupItemValues = lookupItem.get_fieldValues();
+                var lookupItemId = lookupItemValues.ID;
+                var lookupItemLabel = lookupItemValues[column.LookupField];
+                var lookupItemObj = { id: lookupItemId, label: lookupItemLabel };
+                column.LookupItems.push(lookupItemObj);
+                column.LookupItemsById[lookupItemId] = lookupItemObj;
+                column.LookupItemsByLabel[lookupItemLabel] = lookupItemObj;
+            }
+        }
+
+        function setMetadataTerms(column, terms) {
+            column.Terms = [];
+            column.TermsById = {};
+            column.TermsByLabel = {};
+            var termEnum = terms.getEnumerator();
+            while (termEnum.moveNext()) {
+                var currentTerm = termEnum.get_current();
+                var currentTermId = currentTerm.get_id().toString();
+                var currentTermLabel = currentTerm.get_name();
+                var termObj = { id: currentTermId, label: currentTermLabel }
+                column.Terms.push(termObj);
+                column.TermsById[currentTermId] = termObj;
+                column.TermsByLabel[currentTermLabel] = termObj;
+            }
+        }
+
         function setListInfoProperties(listsInfo, fieldData) {
+            var fieldLookups = [];
             for (var i = 0; i < fieldData.length; i++) {
                 var field = fieldData[i];
                 var internalName = field.get_internalName();
@@ -309,9 +515,16 @@
                 var listInfo = listsInfo[listTitle];
                 if (listInfo !== undefined && listInfo.Columns !== undefined) {
                     var column = listInfo.Columns[internalName];
-                    setColumnInfo(column, field);
+                    if (listInfo.LookupCount === undefined) {
+                        listInfo.LookupCount = 0;
+                    }
+                    listInfo.LookupCount = setColumnInfo(column, field, fieldLookups, listInfo.LookupCount);
+                }
+                else {
+                    //May be a site column instead of a list column.  Although this shouldn't happen.
                 }
             }
+            return fieldLookups;
         }
 
         //function setListInfoProperties(listsInfo) {
@@ -598,78 +811,32 @@
             }
         }
 
-        function getTermsForField(listName, fieldName) {
-            var termsDeferred = $q.defer();
-            var context = SP.ClientContext.get_current();
-            var web = context.get_web();
-            var list = web.get_lists().getByTitle(listName);
-            var fields = list.get_fields();
-            var field = fields.getByInternalNameOrTitle(fieldName);
-            context.load(field);
-            context.executeQueryAsync(onFieldSucceeded, function (sender, args) {
-                console.log(fieldName);
-                console.log(args.get_message());
-            });
-
-            return termsDeferred.promise;
-
-            function onFieldSucceeded() {
-                var fieldSchema = field.get_schemaXml();
-                var sspInfo = parseMetadataSchema(fieldSchema);
-                var taxSession = SP.Taxonomy.TaxonomySession.getTaxonomySession(context);
-                var termStores = taxSession.get_termStores();
-                var termStore = termStores.getById(sspInfo.sspId);
-                var termSet = termStore.getTermSet(sspInfo.termSetId);
-                var terms = termSet.getAllTerms();
-                context.load(terms);
-                context.executeQueryAsync(onTaxSucceeded, function (sender, args) {
-                    console.log(fieldName);
-                    console.log(args.get_message());
-                });
-
-                function onTaxSucceeded() {
-                    termsDeferred.resolve(terms);
-                }
-            }
-        }
-
-        function setTermsForField(column, terms) {
-            var termEnum = terms.getEnumerator();
-            column.Terms = [];
-            column.TermsById = {};
-            column.TermsByLabel = {};
-            while (termEnum.moveNext()) {
-                var currentTerm = termEnum.get_current();
-                var currentTermId = currentTerm.get_id().toString();
-                var currentTermLabel = currentTerm.get_name();
-                var termObj = { id: currentTermId, label: currentTermLabel }
-                column.Terms.push(termObj);
-                column.TermsById[currentTermId] = termObj;
-                column.TermsByLabel[currentTermLabel] = termObj;
-            }
-            callbackFunction(termInfo);
-        }
-
-        function parseMetadataSchema(schema) {
-            var xmlDoc = $.parseXML(schema);
+        function parseMetadataSchema(column) {
+            var xmlDoc = $.parseXML(column.SchemaXml);
             var xml = $(xmlDoc);
-            var sspInfo = { sspId: "", groupId: "", termSetId: "" };
+            var field = xml.find("Field");
+            var type = "";
+            if (field !== undefined) {
+                type = field.attr("Type");
+            }
             var properties = xml.find("Property");
-            for (i = 0; i < properties.length; i++) {
+            for (var i = 0; i < properties.length; i++) {
                 var propertyName = properties[i].firstChild.textContent === undefined ? properties[i].firstChild.text : properties[i].firstChild.textContent;
                 var propertyValue = properties[i].lastChild.textContent === undefined ? properties[i].lastChild.text : properties[i].lastChild.textContent;
-                switch (propertyName) {
-                    case "SspId":
-                        sspInfo.sspId = propertyValue;
-                        break;
-                    case "GroupId":
-                        sspInfo.groupId = propertyValue;
-                        break;
-                    case "TermSetId":
-                        sspInfo.termSetId = propertyValue;
+                if (propertyName !== propertyValue) {
+                    switch (propertyName) {
+                        case "SspId":
+                            column.SspId = propertyValue;
+                            break;
+                        case "GroupId":
+                            column.GroupId = propertyValue;
+                            break;
+                        case "TermSetId":
+                            column.TermSetId = propertyValue;
+                    }
                 }
             }
-            return sspInfo;
+            return type;
         }
 
         function setItemValues(columns, listItem, itemProps) {
@@ -842,4 +1009,4 @@
 
         /**/
     }
-})(angular)
+})(angular, jQuery)

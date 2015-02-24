@@ -3,5 +3,8 @@
   <Module Name="AngularSP">
     <File Path="AngularSP\AngularSP.Factory.js" Url="AngularSP/AngularSP.Factory.js" />
     <File Path="AngularSP\lib\angular.min.js" Url="AngularSP/lib/angular.min.js" />
+    <File Path="AngularSP\lib\jquery-1.10.2.min.js" Url="AngularSP/lib/jquery-1.10.2.min.js" />
+    <File Path="AngularSP\lib\jquery-1.10.2.min.js.map" Url="AngularSP/lib/jquery-1.10.2.min.js.map" />
+    <File Path="AngularSP\AngularSP.Directives.js" Url="AngularSP/AngularSP.Directives.js" />
   </Module>
 </Elements>

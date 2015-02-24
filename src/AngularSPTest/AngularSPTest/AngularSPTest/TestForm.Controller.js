@@ -16,9 +16,9 @@
             var cTypeDefs = data[1].data;
             var listDefs = data[2].data;
 
-            console.log(columnDefs);
-            console.log(cTypeDefs);
-            console.log(listDefs);
+            //console.log(columnDefs);
+            //console.log(cTypeDefs);
+            //console.log(listDefs);
             
             spListFactory.initFactory(columnDefs, cTypeDefs, listDefs);
         }, function (reason) {

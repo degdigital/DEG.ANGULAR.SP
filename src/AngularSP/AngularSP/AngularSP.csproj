@@ -53,6 +53,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AngularSP\lib\jquery-1.10.2.min.js.map" />
     <None Include="AngularSP\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{10fe1b36-1288-4ea9-940e-cdaa2e157985}</SharePointProjectItemId>
     </None>
@@ -72,6 +73,7 @@
     <Content Include="AngularSP\AngularSP.Factory.js" />
     <Content Include="AngularSP\Elements.xml" />
     <Content Include="AngularSP\lib\angular.min.js" />
+    <Content Include="AngularSP\lib\jquery-1.10.2.min.js" />
     <Content Include="Features\AngularSP\AngularSP.Template.xml">
       <DependentUpon>AngularSP.feature</DependentUpon>
     </Content>
