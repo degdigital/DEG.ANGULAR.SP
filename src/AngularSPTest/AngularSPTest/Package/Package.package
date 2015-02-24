@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.0.0.0" Id="01efa02a-de95-4206-a21b-0eb3d8bb854c" solutionId="01efa02a-de95-4206-a21b-0eb3d8bb854c" resetWebServer="false" sharePointProductVersion="15.0" name="AngularSPTest" xmlns="http://schemas.microsoft.com/VisualStudio/2008/SharePointTools/PackageModel">
+  <features>
+    <featureReference itemId="4e62bc8f-01d5-46d2-8196-961080e3f92e" />
+  </features>
+</package>

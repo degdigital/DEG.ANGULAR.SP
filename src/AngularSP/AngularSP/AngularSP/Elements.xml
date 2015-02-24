@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+  <Module Name="AngularSP">
+    <File Path="AngularSP\AngularSP.Factory.js" Url="AngularSP/AngularSP.Factory.js" />
+    <File Path="AngularSP\lib\angular.min.js" Url="AngularSP/lib/angular.min.js" />
+  </Module>
+</Elements>

@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProjectItem Type="Microsoft.VisualStudio.SharePoint.Module" DefaultFile="Elements.xml" SupportedTrustLevels="All" SupportedDeploymentScopes="Web, Site" xmlns="http://schemas.microsoft.com/VisualStudio/2010/SharePointTools/SharePointProjectItemModel">
+  <Files>
+    <ProjectItemFile Source="Elements.xml" Target="AngularSP\" Type="ElementManifest" />
+    <ProjectItemFile Source="AngularSP.Factory.js" Target="AngularSP\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\angular.min.js" Target="AngularSP\lib\" Type="ElementFile" />
+  </Files>
+</ProjectItem>
