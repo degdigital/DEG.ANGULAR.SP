@@ -20,21 +20,23 @@
         var serverRelativeUrl;
 
         var columnDefinitions;
-
+        var contentTypeDefinitions;
         var listDefinitions;
 
         var columnsInfo;
-
+        var cTypesInfo;
         var listsInfo;
 
         return service;
 
-        function initFactory(columnDefs, listDefs) {
+        function initFactory(columnDefs, cTypeDefs, listDefs) {
 
             columnDefinitions = columnDefs;
+            columnDefinitions = cTypeDefs;
             listDefinitions = listDefs;
 
             columnsInfo = ng.copy(columnDefs);
+            cTypesInfo = ng.copy(cTypeDefs);
             listsInfo = ng.copy(listDefs);
 
             var initDeferred = $q.defer();
@@ -54,14 +56,17 @@
 
                 context.load(web, "ServerRelativeUrl");
 
-                var fieldData = loadColumns(columnDefs);
+                var columnFieldData = loadSiteColumnProperties(columnDefs);
+                var listFieldData = loadListInfoProperties(listDefs);
 
                 context.executeQueryAsync(success, failure);
 
                 function success() {
                     serverRelativeUrl = web.get_serverRelativeUrl();
-                    setColumnInfo(columnsInfo, fieldData);
+                    setSiteColumnProperties(columnsInfo, columnFieldData);
+                    setListInfoProperties(listsInfo, listFieldData);
                     console.log(columnsInfo);
+                    console.log(listsInfo);
                     initDeferred.resolve();
                 }
 
@@ -128,7 +133,7 @@
 
         /**/
 
-        function loadColumns(columnDefs) {
+        function loadSiteColumnProperties(columnDefs) {
             var fieldData = [];
             var context = SP.ClientContext.get_current();
             var web = context.get_web();
@@ -143,111 +148,14 @@
             return fieldData;
         }
 
-        function setColumnInfo(columnsInfo, fieldData) {
+        function setSiteColumnProperties(columnsInfo, fieldData) {
             var context = new SP.ClientContext.get_current();
             for (var i = 0; i < fieldData.length; i++) {
                 var field = fieldData[i];
                 var internalName = field.get_internalName();
                 if (columnsInfo[internalName] !== undefined) {
                     var column = columnsInfo[internalName];
-                    column.IsRequired = field.get_required();
-                    column.SchemaXml = field.get_schemaXml();
-                    column.DefaultValue = field.get_defaultValue();
-                    switch (column.Type) {
-                        case "text":
-                            break;
-                        case "multiText":
-                            break;
-                        case "choice":
-                            var choiceField = context.castTo(field, SP.FieldChoice);
-                            //req
-                            //choices
-                            //default
-                            //displayAs
-                            break;
-                        case "multiChoice":
-                            var choiceField = context.castTo(field, SP.FieldChoice);
-                            //req
-                            //choices
-                            //default
-                            break;
-                        case "lookup":
-                            //req
-                            //choices
-                            break;
-                        case "multiLookup":
-                            //req
-                            //choices
-                            break;
-                        case "yesNo":
-                            break;
-                        case "person":
-                            //req
-                            //peopleOnly/peopleAndGroups
-                            //chooseFrom(group)
-                            //showField
-                            break;
-                        case "multiPerson":
-                            //req
-                            //peopleOnly/peopleAndGroups
-                            //chooseFrom(group)
-                            //showField
-                            break;
-                        case "metadata":
-                            //req
-                            //choices
-                            //displayValue
-                            //allowFillIn
-                            //default
-                            var termsPromise = getTermsForField(listName, columnName);
-                            termsPromise.then(function (terms) {
-                                setTermsForField(column, terms);
-                            }, function (reason) {
-
-                            });
-                            fieldPromises.push(termsPromise);
-                            break;
-                        case "multiMetadata":
-                            //req
-                            //choices
-                            //displayValue
-                            //allowFillIn
-                            //default
-                            var termsPromise = getTermsForField(listName, columnName);
-                            termsPromise.then(function (terms) {
-                                setTermsForField(column, terms);
-                            }, function (reason) {
-
-                            });
-                            fieldPromises.push(termsPromise);
-                            break;
-                        case "link":
-                            //req
-                            //format (hyperlink/picture)
-                            break;
-                        case "number":
-                            //req
-                            //default
-                            //minmax
-                            //decimalplaces
-                            //showaspercentage
-                            break;
-                        case "currency":
-                            //req
-                            //default
-                            //minmax
-                            //decimalplaces
-                            //format
-                            break;
-                        case "dateTime":
-                            //req
-                            //default
-                            //format (dateOnly/dateTime) (standard/friendly)
-                            break;
-                        default:
-                            //throw error.
-                            break;
-                    }
+                    setColumnInfo(column, field);
                 }
                 else {
                     //Very strange error.
@@ -256,44 +164,153 @@
             }
         }
 
-        function loadListInfoProperties(listsInfo) {
-            var fields = [];
+        function setColumnInfo(column, field) {
+            column.IsRequired = field.get_required();
+            column.SchemaXml = field.get_schemaXml();
+            column.DefaultValue = field.get_defaultValue();
+            column.Scope = field.get_scope();
+            switch (column.Type) {
+                case "text":
+                    break;
+                case "multiText":
+                    break;
+                case "choice":
+                    var choiceField = context.castTo(field, SP.FieldChoice);
+                    //req
+                    //choices
+                    //default
+                    //displayAs
+                    break;
+                case "multiChoice":
+                    var choiceField = context.castTo(field, SP.FieldChoice);
+                    //req
+                    //choices
+                    //default
+                    break;
+                case "lookup":
+                    //req
+                    //choices
+                    break;
+                case "multiLookup":
+                    //req
+                    //choices
+                    break;
+                case "yesNo":
+                    break;
+                case "person":
+                    //req
+                    //peopleOnly/peopleAndGroups
+                    //chooseFrom(group)
+                    //showField
+                    break;
+                case "multiPerson":
+                    //req
+                    //peopleOnly/peopleAndGroups
+                    //chooseFrom(group)
+                    //showField
+                    break;
+                case "metadata":
+                    //req
+                    //choices
+                    //displayValue
+                    //allowFillIn
+                    //default
+                    //var termsPromise = getTermsForField(listName, columnName);
+                    //termsPromise.then(function (terms) {
+                    //    setTermsForField(column, terms);
+                    //}, function (reason) {
+
+                    //});
+                    //fieldPromises.push(termsPromise);
+                    break;
+                case "multiMetadata":
+                    //req
+                    //choices
+                    //displayValue
+                    //allowFillIn
+                    //default
+                    //var termsPromise = getTermsForField(listName, columnName);
+                    //termsPromise.then(function (terms) {
+                    //    setTermsForField(column, terms);
+                    //}, function (reason) {
+
+                    //});
+                    //fieldPromises.push(termsPromise);
+                    break;
+                case "link":
+                    //req
+                    //format (hyperlink/picture)
+                    break;
+                case "number":
+                    //req
+                    //default
+                    //minmax
+                    //decimalplaces
+                    //showaspercentage
+                    break;
+                case "currency":
+                    //req
+                    //default
+                    //minmax
+                    //decimalplaces
+                    //format
+                    break;
+                case "dateTime":
+                    //req
+                    //default
+                    //format (dateOnly/dateTime) (standard/friendly)
+                    break;
+                default:
+                    //throw error.
+                    break;
+            }
+        }
+
+        function loadListInfoProperties(listDefs) {
+            var fieldData = [];
             var context = SP.ClientContext.get_current();
             var web = context.get_web();
-            for (var listName in listsInfo) {
-                if (listsInfo.hasOwnProperty(listName)) {
-                    var listDef = listsInfo[listName];
+            for (var listName in listDefs) {
+                if (listDefs.hasOwnProperty(listName)) {
+                    var listDef = listDefs[listName];
                     var listTitle = listName;
-                    if (list.DisplayName !== undefined) {
-                        listTitle = listDef.DisplayName;
+                    if (listDef.DisplayName !== undefined) {
+                        listTitle = listDef.DisplayName;    
                     }
                     var list = web.get_lists().getByTitle(listTitle);
-                    if (list.Columns !== undefined) {
-                        loadListFields(context, list, list.Columns, fields);
+                    if (listDef.Columns !== undefined) {
+                        loadListFields(context, list, listDef.Columns, fieldData);
                     }
                     else {
                         //Report missing column defenitions Error.
                     }
                 }
             }
-            return fields;
+            return fieldData;
         }
 
-        function loadListFields(context, list, listColumns, fields) {
+        function loadListFields(context, list, listColumns, fieldData) {
             var fields = list.get_fields();
             for (var columnName in listColumns) {
                 if (listColumns.hasOwnProperty(columnName)) {
                     var field = fields.getByInternalNameOrTitle(columnName);
                     context.load(field);
-                    fields.push(field);
+                    fieldData.push(field);
                 }
             }
         }
 
-        function setListInfoProperties(fields) {
-            for (var i = 0; i < fields.length; i++) {
-                var field = fields[i];
+        function setListInfoProperties(listsInfo, fieldData) {
+            for (var i = 0; i < fieldData.length; i++) {
+                var field = fieldData[i];
                 var internalName = field.get_internalName();
+                var scope = field.get_scope();
+                var listTitle = scope.split("/").pop();
+                var listInfo = listsInfo[listTitle];
+                if (listInfo !== undefined && listInfo.Columns !== undefined) {
+                    var column = listInfo.Columns[internalName];
+                    setColumnInfo(column, field);
+                }
             }
         }
 

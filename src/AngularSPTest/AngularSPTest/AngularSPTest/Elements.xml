@@ -7,5 +7,6 @@
     <File Path="AngularSPTest\Form.View.html" Url="AngularSPTest/Form.View.html" />
     <File Path="AngularSPTest\TestForm.Controller.js" Url="AngularSPTest/TestForm.Controller.js" />
     <File Path="AngularSPTest\ColumnDefinitions.js" Url="AngularSPTest/ColumnDefinitions.js" />
+    <File Path="AngularSPTest\ContentTypeDefinitions.js" Url="AngularSPTest/ContentTypeDefinitions.js" />
   </Module>
 </Elements>

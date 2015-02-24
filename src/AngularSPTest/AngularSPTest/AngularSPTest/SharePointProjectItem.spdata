@@ -8,5 +8,6 @@
     <ProjectItemFile Source="Form.View.html" Target="AngularSPTest\" Type="ElementFile" />
     <ProjectItemFile Source="TestForm.Controller.js" Target="AngularSPTest\" Type="ElementFile" />
     <ProjectItemFile Source="ColumnDefinitions.js" Target="AngularSPTest\" Type="ElementFile" />
+    <ProjectItemFile Source="ContentTypeDefinitions.js" Target="AngularSPTest\" Type="ElementFile" />
   </Files>
 </ProjectItem>

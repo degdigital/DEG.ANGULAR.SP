@@ -7,17 +7,20 @@
     function testFormCont($scope, $http, $q, spListFactory) {
         console.log("Initiating...");
 
-        var listDefPromise = $http.get('ListDefinitions.js');
         var columnDefPromise = $http.get('ColumnDefinitions.js');
+        var cTypeDefPromise = $http.get('ContentTypeDefinitions.js');
+        var listDefPromise = $http.get('ListDefinitions.js');
 
-        $q.all([columnDefPromise, listDefPromise]).then(function (data) {
+        $q.all([columnDefPromise, cTypeDefPromise, listDefPromise]).then(function (data) {
             var columnDefs = data[0].data;
-            var listDefs = data[1].data;
+            var cTypeDefs = data[1].data;
+            var listDefs = data[2].data;
 
             console.log(columnDefs);
+            console.log(cTypeDefs);
             console.log(listDefs);
             
-            spListFactory.initFactory(columnDefs, listDefs);
+            spListFactory.initFactory(columnDefs, cTypeDefs, listDefs);
         }, function (reason) {
             console.log(reason);
         });
