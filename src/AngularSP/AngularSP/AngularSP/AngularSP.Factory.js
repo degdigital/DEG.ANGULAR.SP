@@ -3,9 +3,9 @@
 (function (ng, $) {
 
     ng.module("angularSP", [])
-        .factory("spListFactory", ['$q', spListFactory]);
+        .factory("spListFactory", ['$rootScope', '$q', spListFactory]);
 
-    function spListFactory($q) {
+    function spListFactory($rootScope, $q) {
 
         var service = {
             initFactory: initFactory,
@@ -14,7 +14,8 @@
             getListItem: getListItem,
             getListItems: getListItems,
             updateListItem: updateListItem,
-            deleteListItem: deleteListItem
+            deleteListItem: deleteListItem,
+            getServerRelativeUrl: getServerRelativeUrl
         }
 
         var serverRelativeUrl;
@@ -28,6 +29,10 @@
         var listsInfo;
 
         return service;
+
+        function getServerRelativeUrl() {
+            return serverRelativeUrl;
+        }
 
         function initFactory(columnDefs, cTypeDefs, listDefs) {
 
@@ -74,8 +79,8 @@
                         fieldLookups.forEach(function (fieldLookup) {
                             fieldLookup.Callback(fieldLookup.Column, fieldLookup.RawResults);
                         });
-                        console.log(listsInfo);
-                        initDeferred.resolve();
+                        $rootScope.listsInfo = listsInfo;
+                        initDeferred.resolve(listsInfo);
                     }
 
                     function lookupsFailure(sender, args) {
@@ -219,15 +224,19 @@
 
         function setColumnInfo(column, field, fieldLookups, lookupCount) {
             var context = SP.ClientContext.get_current();
+            column.Title = field.get_title();
             column.IsRequired = field.get_required();
             column.SchemaXml = field.get_schemaXml();
             column.DefaultValue = field.get_defaultValue();
+            column.Value = field.get_defaultValue();
             column.Scope = field.get_scope();
             column.FieldType = field.get_fieldTypeKind();
             switch (column.Type) {
                 case "text":
                     if (column.FieldType === 2) {
-
+                        if (column.InputType === undefined) {
+                            column.InputType = "text";
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");
@@ -235,7 +244,16 @@
                     break;
                 case "multiText":
                     if (column.FieldType === 3) {
-
+                        var multiLineTextField = context.castTo(field, SP.FieldMultiLineText);
+                        column.IsRichText = multiLineTextField.get_richText();
+                        if (column.InputType === undefined) {
+                            if (column.IsRichText) {
+                                column.InputType = "nicEdit";
+                            }
+                            else {
+                                column.InputType = "textBox";
+                            }
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");
@@ -243,6 +261,9 @@
                     break;
                 case "choice":
                     if (column.FieldType === 6) {
+                        if (column.InputType === undefined) {
+                            column.InputType = "dropDown";
+                        }
                         var choiceField = context.castTo(field, SP.FieldChoice);
                         column.Choices = choiceField.get_choices();
                         column.FillInChoice = choiceField.get_fillInChoice();
@@ -254,6 +275,9 @@
                     break;
                 case "multiChoice":
                     if (column.FieldType === 15) {
+                        if (column.InputType === undefined) {
+                            column.InputType = "checkbox";
+                        }
                         var multiChoiceField = context.castTo(field, SP.FieldMultiChoice);
                         column.Choices = multiChoiceField.get_choices();
                         column.FillInChoice = multiChoiceField.get_fillInChoice();
@@ -264,6 +288,9 @@
                     break;
                 case "lookup":
                     if (column.FieldType === 7) {
+                        if (column.InputType === undefined) {
+                            column.InputType = "dropDown";
+                        }
                         var lookupField = context.castTo(field, SP.FieldLookup);
                         var multiLookup = lookupField.get_allowMultipleValues();
                         if (!multiLookup) {
@@ -284,6 +311,9 @@
                     break;
                 case "multiLookup":
                     if (column.FieldType === 7) {
+                        if (column.InputType === undefined) {
+                            column.InputType = "checkbox";
+                        }
                         var lookupField = context.castTo(field, SP.FieldLookup);
                         var multiLookup = lookupField.get_allowMultipleValues();
                         if (multiLookup) {
@@ -304,7 +334,9 @@
                     break;
                 case "yesNo":
                     if (column.FieldType === 8) {
-
+                        if (column.InputType === undefined) {
+                            column.InputType = "checkbox";
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");
@@ -312,6 +344,9 @@
                     break;
                 case "person":
                     if (column.FieldType === 20) {
+                        if (column.InputType === undefined) {
+                            column.InputType = "peoplePicker";
+                        }
                         lookupCount++;
                     }
                     else {
@@ -323,6 +358,9 @@
                     break;
                 case "multiPerson":
                     if (column.FieldType === 20) {
+                        if (column.InputType === undefined) {
+                            column.InputType = "peoplePicker";
+                        }
                         lookupCount++;
                     }
                     else {
@@ -334,6 +372,9 @@
                     break;
                 case "metadata":
                     if (column.FieldType === 0) {
+                        if (column.InputType === undefined) {
+                            column.InputType = "dropDown";
+                        }
                         var schemaFieldType = parseMetadataSchema(column);
                         if (schemaFieldType === "TaxonomyFieldType") {
                             var rawTermSet = loadMetadataTerms(column);
@@ -353,6 +394,9 @@
                     break;
                 case "multiMetadata":
                     if (column.FieldType === 0) {
+                        if (column.InputType === undefined) {
+                            column.InputType = "checkbox";
+                        }
                         var schemaFieldType = parseMetadataSchema(column);
                         if (schemaFieldType === "TaxonomyFieldTypeMulti") {
                             var rawTermSet = loadMetadataTerms(column);
@@ -372,7 +416,9 @@
                     break;
                 case "link":
                     if (column.FieldType === 11) {
-
+                        if (column.InputType === undefined) {
+                            column.InputType = "text";
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");
@@ -381,7 +427,9 @@
                     break;
                 case "number":
                     if (column.FieldType === 9) {
-
+                        if (column.InputType === undefined) {
+                            column.InputType = "text";
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");
@@ -392,7 +440,9 @@
                     break;
                 case "currency":
                     if (column.FieldType === 10) {
-
+                        if (column.InputType === undefined) {
+                            column.InputType = "text";
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");
@@ -403,7 +453,9 @@
                     break;
                 case "dateTime":
                     if (column.FieldType === 4) {
-
+                        if (column.InputType === undefined) {
+                            column.InputType = "dateTime";
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");

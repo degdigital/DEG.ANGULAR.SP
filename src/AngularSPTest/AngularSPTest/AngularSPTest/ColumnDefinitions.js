@@ -3,17 +3,16 @@
         "Type": "text"
     },
 	"RichTextColumn": {
-	    "Group": "AngularSPTest",
-		"Type": "multiText",
-		"InputType": "nicEdit"
+		"Type": "multiText"
 	},
     "ChoiceColumn": {
-        "Type": "choice",
-        "InputType": "dropDown"
+        "Type": "choice"
     },
     "MetadataColumn": {
-        "Type": "metadata",
-        "InputType": "dropDown"
+        "Type": "metadata"
+    },
+    "MultiMetadataColumn" : {
+        "Type": "multiMetadata"
     },
     "NumberColumn": {
         "Type": "number"

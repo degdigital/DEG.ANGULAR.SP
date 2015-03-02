@@ -7,5 +7,7 @@
     <ProjectItemFile Source="lib\jquery-1.10.2.min.js" Target="AngularSP\lib\" Type="ElementFile" />
     <ProjectItemFile Source="lib\jquery-1.10.2.min.js.map" Target="AngularSP\lib\" Type="ElementFile" />
     <ProjectItemFile Source="AngularSP.Directives.js" Target="AngularSP\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\nicEdit.custom.js" Target="AngularSP\lib\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\images\nicEditorIcons.gif" Target="AngularSP\lib\images\" Type="ElementFile" />
   </Files>
 </ProjectItem>

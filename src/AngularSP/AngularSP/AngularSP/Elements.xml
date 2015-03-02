@@ -6,5 +6,7 @@
     <File Path="AngularSP\lib\jquery-1.10.2.min.js" Url="AngularSP/lib/jquery-1.10.2.min.js" />
     <File Path="AngularSP\lib\jquery-1.10.2.min.js.map" Url="AngularSP/lib/jquery-1.10.2.min.js.map" />
     <File Path="AngularSP\AngularSP.Directives.js" Url="AngularSP/AngularSP.Directives.js" />
+    <File Path="AngularSP\lib\nicEdit.custom.js" Url="AngularSP/lib/nicEdit.custom.js" />
+    <File Path="AngularSP\lib\images\nicEditorIcons.gif" Url="AngularSP/lib/images/nicEditorIcons.gif" />
   </Module>
 </Elements>

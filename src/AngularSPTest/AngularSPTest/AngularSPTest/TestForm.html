@@ -8,22 +8,53 @@
     <script type="text/javascript" src="/_layouts/15/1033/initstrings.js"></script>
     <script type="text/javascript" src="/_layouts/15/1033/strings.js"></script>
     <script type="text/javascript" src="/_layouts/15/clienttemplates.js"></script>
+    <script type="text/javascript" src="/_layouts/15/clientforms.js"></script>
+    <script type="text/javascript" src="/_layouts/15/clientpeoplepicker.js"></script>
+    <script type="text/javascript" src="/_layouts/15/autofill.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.runtime.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.js"></script>
+    <script type="text/javascript" src="/_layouts/15/sp.core.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.userprofiles.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.ui.taxonomy.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.taxonomy.js"></script>
 
     <script type="text/javascript" src="../AngularSP/lib/angular.min.js"></script>
     <script type="text/javascript" src="../AngularSP/lib/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="../AngularSP/lib/nicEdit.custom.js"></script>
     <script type="text/javascript" src="../AngularSP/AngularSP.Factory.js"></script>
+    <script type="text/javascript" src="../AngularSP/AngularSP.Directives.js"></script>
 
     <script type="text/javascript" src="TestForm.Controller.js"></script>
+
+    <style type="text/css">
+        [data-ngsp-column] > label {
+            display: block;
+        }
+        
+        [data-ngsp-column="listsInfo.AngularSPTestList.Columns.Title"] > label {
+            color: red;
+        }
+
+        [contenteditable] {
+            border: 1px solid black;
+        }
+    </style>
 
     <meta charset="utf-8" />
     <title>Test Form</title>
 </head>
 <body data-ng-app="testForm">
-    <div data-ng-controller="testFormController"></div>
+    <div data-ng-controller="testFormController">
+        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Title"></div>
+        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.RichTextColumn"></div>
+        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.ChoiceColumn"></div>
+        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.LookupColumn"></div>
+        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MetadataColumn"></div>
+        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MultiMetadataColumn"></div>
+        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.PersonColumn"></div>
+        <div>
+            <input type="button" ng-click="Submit(listsInfo.AngularSPTestList.Columns)" value="Submit" />
+        </div>
+    </div>
 </body>
 </html>

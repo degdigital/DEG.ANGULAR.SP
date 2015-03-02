@@ -2,9 +2,9 @@
 
 (function (ng) {
     ng.module('testForm', ['angularSP'])
-        .controller('testFormController', ['$scope', '$http', '$q', 'spListFactory', testFormCont])
+        .controller('testFormController', ['$rootScope', '$scope', '$http', '$q', 'spListFactory', testFormCont]);
 
-    function testFormCont($scope, $http, $q, spListFactory) {
+    function testFormCont($rootScope, $scope, $http, $q, spListFactory) {
         console.log("Initiating...");
 
         var columnDefPromise = $http.get('ColumnDefinitions.js');
@@ -20,9 +20,27 @@
             //console.log(cTypeDefs);
             //console.log(listDefs);
             
-            spListFactory.initFactory(columnDefs, cTypeDefs, listDefs);
+            //console.log(spListFactory.getServerRelativeUrl());
+
+            var initPromise = spListFactory.initFactory(columnDefs, cTypeDefs, listDefs);
+
+            initPromise.then(initSuccess, initFailure);
+
+            function initSuccess(listsInfo) {
+                $scope.listsInfo = listsInfo;
+                console.log($scope.listsInfo);
+            }
+
+            function initFailure(reason) {
+                console.log(reason);
+            }
+
         }, function (reason) {
             console.log(reason);
         });
+
+        $scope.Submit = function (model) {
+            console.log(model);
+        };
     }
 })(angular);
