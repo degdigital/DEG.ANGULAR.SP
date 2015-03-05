@@ -3,6 +3,12 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <link rel="stylesheet" type="text/css" href="/_layouts/15/1033/styles/Themable/corev15.css" />
+    <link rel="stylesheet" type="text/css" href="../AngularSP/lib/styles/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../AngularSP/ngsp.fixes.css" />
+    
+
     <script type="text/javascript" src="//ajax.aspnetcdn.com/ajax/4.0/1/MicrosoftAjax.js"></script>
     <script type="text/javascript" src="/_layouts/15/init.js"></script>
     <script type="text/javascript" src="/_layouts/15/1033/initstrings.js"></script>
@@ -11,6 +17,7 @@
     <script type="text/javascript" src="/_layouts/15/clientforms.js"></script>
     <script type="text/javascript" src="/_layouts/15/clientpeoplepicker.js"></script>
     <script type="text/javascript" src="/_layouts/15/autofill.js"></script>
+    <script type="text/javascript" src="/_layouts/15/core.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.runtime.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.core.js"></script>
@@ -19,6 +26,7 @@
     <script type="text/javascript" src="/_layouts/15/sp.taxonomy.js"></script>
 
     <script type="text/javascript" src="../AngularSP/lib/angular.min.js"></script>
+    <script type="text/javascript" src="../AngularSP/lib/ui-bootstrap-tpls-0.12.1.min.js"></script>
     <script type="text/javascript" src="../AngularSP/lib/jquery-1.10.2.min.js"></script>
     <script type="text/javascript" src="../AngularSP/lib/nicEdit.custom.js"></script>
     <script type="text/javascript" src="../AngularSP/AngularSP.Factory.js"></script>
@@ -35,6 +43,11 @@
             color: red;
         }
 
+        [data-ngsp-column="listsInfo.AngularSPTestList.Columns.DateTimeColumn"] > span {
+            /*display: block;*/
+            /*width: 200px;*/
+        }
+
         [contenteditable] {
             border: 1px solid black;
         }
@@ -45,15 +58,21 @@
 </head>
 <body data-ng-app="testForm">
     <div data-ng-controller="testFormController">
-        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Title"></div>
-        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.RichTextColumn"></div>
-        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.ChoiceColumn"></div>
-        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.LookupColumn"></div>
-        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MetadataColumn"></div>
-        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MultiMetadataColumn"></div>
-        <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.PersonColumn"></div>
-        <div>
-            <input type="button" ng-click="Submit(listsInfo.AngularSPTestList.Columns)" value="Submit" />
+        <div data-ng-hide="showForm"><img src="/_layouts/15/images/gears_anv4.gif" /></div>
+        <div data-ng-show="showForm">
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Title"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.RichTextColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.ChoiceColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.LookupColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MetadataColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MultiMetadataColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.PersonColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.YesNoColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Developer"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.DateTimeColumn"></div>
+            <div>
+                <input type="button" ng-click="Submit(listsInfo.AngularSPTestList.Columns)" value="Submit" />
+            </div>
         </div>
     </div>
 </body>

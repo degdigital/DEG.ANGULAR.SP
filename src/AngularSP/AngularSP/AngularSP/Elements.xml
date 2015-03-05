@@ -8,5 +8,14 @@
     <File Path="AngularSP\AngularSP.Directives.js" Url="AngularSP/AngularSP.Directives.js" />
     <File Path="AngularSP\lib\nicEdit.custom.js" Url="AngularSP/lib/nicEdit.custom.js" />
     <File Path="AngularSP\lib\images\nicEditorIcons.gif" Url="AngularSP/lib/images/nicEditorIcons.gif" />
+    <File Path="AngularSP\lib\angular.min.js.map" Url="AngularSP/lib/angular.min.js.map" />
+    <File Path="AngularSP\lib\styles\bootstrap.min.css" Url="AngularSP/lib/styles/bootstrap.min.css" />
+    <File Path="AngularSP\lib\ui-bootstrap-tpls-0.12.1.min.js" Url="AngularSP/lib/ui-bootstrap-tpls-0.12.1.min.js" />
+    <File Path="AngularSP\lib\fonts\glyphicons-halflings-regular.eot" Url="AngularSP/lib/fonts/glyphicons-halflings-regular.eot" />
+    <File Path="AngularSP\lib\fonts\glyphicons-halflings-regular.svg" Url="AngularSP/lib/fonts/glyphicons-halflings-regular.svg" />
+    <File Path="AngularSP\lib\fonts\glyphicons-halflings-regular.ttf" Url="AngularSP/lib/fonts/glyphicons-halflings-regular.ttf" />
+    <File Path="AngularSP\lib\fonts\glyphicons-halflings-regular.woff" Url="AngularSP/lib/fonts/glyphicons-halflings-regular.woff" />
+    <File Path="AngularSP\lib\fonts\glyphicons-halflings-regular.woff2" Url="AngularSP/lib/fonts/glyphicons-halflings-regular.woff2" />
+    <File Path="AngularSP\ngsp.fixes.css" Url="AngularSP/ngsp.fixes.css" />
   </Module>
 </Elements>

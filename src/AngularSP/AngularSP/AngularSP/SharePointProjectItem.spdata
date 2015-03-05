@@ -9,5 +9,14 @@
     <ProjectItemFile Source="AngularSP.Directives.js" Target="AngularSP\" Type="ElementFile" />
     <ProjectItemFile Source="lib\nicEdit.custom.js" Target="AngularSP\lib\" Type="ElementFile" />
     <ProjectItemFile Source="lib\images\nicEditorIcons.gif" Target="AngularSP\lib\images\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\angular.min.js.map" Target="AngularSP\lib\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\styles\bootstrap.min.css" Target="AngularSP\lib\styles\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\ui-bootstrap-tpls-0.12.1.min.js" Target="AngularSP\lib\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\fonts\glyphicons-halflings-regular.eot" Target="AngularSP\lib\fonts\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\fonts\glyphicons-halflings-regular.svg" Target="AngularSP\lib\fonts\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\fonts\glyphicons-halflings-regular.ttf" Target="AngularSP\lib\fonts\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\fonts\glyphicons-halflings-regular.woff" Target="AngularSP\lib\fonts\" Type="ElementFile" />
+    <ProjectItemFile Source="lib\fonts\glyphicons-halflings-regular.woff2" Target="AngularSP\lib\fonts\" Type="ElementFile" />
+    <ProjectItemFile Source="ngsp.fixes.css" Target="AngularSP\" Type="ElementFile" />
   </Files>
 </ProjectItem>

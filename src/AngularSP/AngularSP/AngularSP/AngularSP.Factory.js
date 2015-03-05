@@ -1,9 +1,10 @@
 ﻿'use strict';
 
+var app = app || angular.module("angularSP", ['ui.bootstrap']);
+
 (function (ng, $) {
 
-    ng.module("angularSP", [])
-        .factory("spListFactory", ['$rootScope', '$q', spListFactory]);
+    app.factory("spListFactory", ['$rootScope', '$q', spListFactory]);
 
     function spListFactory($rootScope, $q) {
 
@@ -225,10 +226,11 @@
         function setColumnInfo(column, field, fieldLookups, lookupCount) {
             var context = SP.ClientContext.get_current();
             column.Title = field.get_title();
+            column.Id = field.get_id().toString();
             column.IsRequired = field.get_required();
             column.SchemaXml = field.get_schemaXml();
             column.DefaultValue = field.get_defaultValue();
-            column.Value = field.get_defaultValue();
+            //column.Value = field.get_defaultValue();
             column.Scope = field.get_scope();
             column.FieldType = field.get_fieldTypeKind();
             switch (column.Type) {
@@ -347,7 +349,16 @@
                         if (column.InputType === undefined) {
                             column.InputType = "peoplePicker";
                         }
-                        lookupCount++;
+                        var userField = context.castTo(field, SP.FieldUser);
+                        column.SelectionGroup = userField.get_selectionGroup();
+                        column.PeopleOnly = (userField.get_selectionMode() === 0);
+                        var multiUsers = userField.get_allowMultipleValues();
+                        if (!multiUsers) {
+                            lookupCount++;
+                        }
+                        else {
+                            console.log(field.get_title() + ": column type mismatch.");
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");
@@ -361,7 +372,16 @@
                         if (column.InputType === undefined) {
                             column.InputType = "peoplePicker";
                         }
-                        lookupCount++;
+                        var userField = context.castTo(field, SP.FieldUser);
+                        column.SelectionGroup = userField.get_selectionGroup();
+                        column.PeopleOnly = (userField.get_selectionMode() === 0);
+                        var multiUsers = userField.get_allowMultipleValues();
+                        if (multiUsers) {
+                            lookupCount++;
+                        }
+                        else {
+                            console.log(field.get_title() + ": column type mismatch.");
+                        }
                     }
                     else {
                         console.log(field.get_title() + ": column type mismatch.");

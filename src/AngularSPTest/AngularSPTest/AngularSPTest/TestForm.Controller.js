@@ -5,6 +5,8 @@
         .controller('testFormController', ['$rootScope', '$scope', '$http', '$q', 'spListFactory', testFormCont]);
 
     function testFormCont($rootScope, $scope, $http, $q, spListFactory) {
+        $scope.showForm = false;
+
         console.log("Initiating...");
 
         var columnDefPromise = $http.get('ColumnDefinitions.js');
@@ -29,6 +31,7 @@
             function initSuccess(listsInfo) {
                 $scope.listsInfo = listsInfo;
                 console.log($scope.listsInfo);
+                $scope.showForm = true;
             }
 
             function initFailure(reason) {

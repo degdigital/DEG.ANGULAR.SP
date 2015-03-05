@@ -1,8 +1,10 @@
 ﻿'use strict';
 
+var app = app || angular.module("angularSP", ['ui.bootstrap']);
+
 (function (ng, $) {
-    ng.module("angularSP")
-        .directive("contenteditable", function () {
+
+    app.directive("contenteditable", function () {
             return {
                 restrict: "A",
                 require: "?ngModel",
@@ -33,50 +35,7 @@
             };
         });
 
-    ng.module("angularSP")
-        .directive("ngspPeoplepicker", function () {
-            return {
-                restrict: "A",
-                require: "?ngModel",
-                link: function (scope, element, attrs, ngModel) {
-                    if (!ngModel) {
-                        return;
-                    }
-                    var elementId = attrs.id;
-
-                    var schema = {
-                        PrincipalAccountType: "User,DL,SecGroup,SPGroup",
-                        SearchPrincipalSource: 15,
-                        ResolvePrincipalSource: 15,
-                        MaximumEntitySuggestions: 50,
-                        Width: "100%",
-                    };
-
-                    if (scope.ngspColumn.IsRequired) {
-                        schema.Required = true;
-                    }
-                    else {
-                        schema.Required = false;
-                    }
-
-                    if (scope.ngspColumn.Type === "person") {
-                        schema.AllowMultipleValues = false;
-                    }
-                    else if (scope.ngspColumn.Type === "multiPerson") {
-                        schema.AllowMultipleValues = true;
-                    }
-                    else {
-                        console.log(scope.ngspColumn.Type + "is not supported as a column type for people pickers.");
-                        return;
-                    }
-
-                    SPClientPeoplePicker_InitStandaloneControlWrapper(elementId, null, schema);
-                }
-            };
-        });
-
-    ng.module("angularSP")
-        .directive("ngspColumn", angularSpField);
+    app.directive("ngspColumn", angularSpField);
     
     function angularSpField ($compile) {
         return {
@@ -93,10 +52,7 @@
                 if (scope.ngspColumn.Title !== undefined && scope.ngspColumn.InputType !== undefined) {
                     element.html("");
                     element.append(generateTitleElement(scope.ngspColumn));
-                    element.append(generateInputElement(scope));
-                    if (scope.ngspColumn.InputType === "nicEdit") {
-                        
-                    }
+                    element.append(generateInputElement(element, scope));
                 }
             });
         }
@@ -107,7 +63,7 @@
             return titleElement;
         }
 
-        function generateInputElement(scope) {
+        function generateInputElement(element, scope) {
             switch (scope.ngspColumn.InputType) {
                 case "text":
                     return generateTextElement(scope);
@@ -124,8 +80,11 @@
                 case "checkbox":
                     return generateCheckboxElement(scope);
                     break;
+                case "dateTime":
+                    return generateDateTimeElement(scope);
+                    break;
                 case "peoplePicker":
-                    return generatePeoplePickerElement(scope);
+                    return generatePeoplePickerElement(element, scope);
                     break;
                 default:
                     console.log(scope.ngspColumn.InputType + " is currently unsupported as an input type.");
@@ -135,14 +94,14 @@
 
         function generateTextElement(scope) {
             var inputElement = $("<input />");
-            inputElement.attr("data-ng-model", "ngspColumn.Value");
+            inputElement.attr("data-ng-model", "ngspColumn.InputValue");
             $compile(inputElement)(scope);
             return inputElement;
         }
 
         function generateTextBoxElement(scope) {
             var inputElement = $("<textarea></textarea>");
-            inputElement.attr("data-ng-model", "ngspColumn.Value");
+            inputElement.attr("data-ng-model", "ngspColumn.InputValue");
             $compile(inputElement)(scope);
             return inputElement;
         }
@@ -150,14 +109,14 @@
         function generateNicEditElement(scope) {
             var outerElement = $("<span></span>");
             var panelElement = $("<div></div>");
-            //panelElement.attr("id", scope.ngspColumn.Title + "_panel");
             outerElement.append(panelElement);
             var contentElement = $("<div></div>");
-            //panelElement.attr("id", scope.ngspColumn.Title + "_content");
             contentElement.attr("contenteditable", "true");
-            contentElement.attr("data-ng-model", "ngspColumn.Value");
+            contentElement.attr("data-ng-model", "ngspColumn.InputValue");
             outerElement.append(contentElement);
 
+
+            //JORDAN: parameterize this.
             var nicEditorConstrutorOption = { iconsPath: '/AngularSP/lib/images/nicEditorIcons.gif' };
             var nicEditorInstance = new nicEditor(nicEditorConstrutorOption);
             nicEditorInstance.setPanel(panelElement[0]);
@@ -170,7 +129,7 @@
 
         function generateDropDownElement(scope) {
             var inputElement = $("<select></select>");
-            inputElement.attr("data-ng-model", "ngspColumn.Value");
+            inputElement.attr("data-ng-model", "ngspColumn.InputValue");
             if (scope.ngspColumn.Type === "choice") {
                 inputElement.attr("data-ng-options", "choice for choice in ngspColumn.Choices");
             }
@@ -198,17 +157,17 @@
                 if (scope.ngspColumn.Type === "multiMetadata")
                 {
                     repeatElement.attr("data-ng-repeat", "term in ngspColumn.Terms");
-                    inputElement.attr("data-ng-model", "ngspColumn.ValueSelected[term.id]");
+                    inputElement.attr("data-ng-model", "ngspColumn.InputValue[term.id]");
                     labelElement.text("{{term.label}}");
                 }
                 else if (scope.ngspColumn.Type === "multiLookup") {
                     repeatElement.attr("data-ng-repeat", "lookupItem in ngspColumn.LookupItems");
-                    inputElement.attr("data-ng-model", "ngspColumn.ValueSelected[lookupItem.id]");
+                    inputElement.attr("data-ng-model", "ngspColumn.InputValue[lookupItem.id]");
                     labelElement.text("{{lookupItem.label}}");
                 }
                 else if (scope.ngspColumn.Type === "multiChoice") {
                     repeatElement.attr("data-ng-repeat", "choice in ngspColumn.Choices");
-                    inputElement.attr("data-ng-model", "ngspColumn.ValueSelected[choice]");
+                    inputElement.attr("data-ng-model", "ngspColumn.InputValue[choice]");
                     labelElement.text("{{choice}}");
                 }
                 repeatElement.append(inputElement);
@@ -217,7 +176,7 @@
             else if (scope.ngspColumn.Type === "yesNo") {
                 var inputElement = $("<input />");
                 inputElement.attr("type", "checkbox");
-                inputElement.attr("data-ng-model", "ngspColumn.ValueSelected");
+                inputElement.attr("data-ng-model", "ngspColumn.InputValue");
                 outerElement.append(inputElement);
             }
             else {
@@ -229,16 +188,131 @@
             return outerElement;
         }
 
-        function generatePeoplePickerElement(scope) {
-            var elementId = "pp_" + scope.ngspColumn.Title;
+        function generateDateTimeElement(scope) {
+            scope.calendarOpened = false;
+            scope.calendarFormat = "yyyy-MM-dd";
+
+            scope.openCalendar = function ($event) {
+                $event.preventDefault();
+                $event.stopPropagation();
+                scope.calendarOpened = true;
+            }
+
             var outerElement = $("<span></span>");
-            outerElement.attr("id", elementId);
-            outerElement.attr("data-ngsp-peoplepicker", "true");
-            outerElement.attr("data-ng-model", "ngspColumn.ValueSelected");
+            outerElement.attr("class", "input-group");
+
+            var dateElement = $("<span></span>");
+            dateElement.attr("class", "input-group");
+
+            var dateTextInputElement = $("<input />");
+            dateTextInputElement.attr("class", "form-control");
+            dateTextInputElement.attr("data-ng-model", "ngspColumn.InputValue.Date");
+            dateTextInputElement.attr("data-datepicker-popup", "{{calendarFormat}}");
+            dateTextInputElement.attr("data-is-open", "calendarOpened");
+            //dateTextInputElement.attr("data-min-date", "'2015-01-01'");
+            //dateTextInputElement.attr("data-max-date", "'2015-06-22'");
+
+            dateElement.append(dateTextInputElement);
+
+            var dateButtonContainerElement = $("<span></span>");
+            dateButtonContainerElement.attr("class", "input-group-btn");
+
+            var dateButtonInputElement = $("<button></button>");
+            dateButtonInputElement.attr("class", "btn btn-default");
+            dateButtonInputElement.attr("data-ng-click", "openCalendar($event)");
+            
+            var dateButtonImageElement = $("<i></i>");
+            dateButtonImageElement.attr("class", "glyphicon glyphicon-calendar");
+
+            dateButtonInputElement.append(dateButtonImageElement);
+
+            dateButtonContainerElement.append(dateButtonInputElement);
+            dateElement.append(dateButtonContainerElement);
+
+            outerElement.append(dateElement);
+
+            var timeElement = $("<timepicker></timepicker>");
+            timeElement.attr("data-ng-model", "ngspColumn.InputValue.Time");
+
+            outerElement.append(timeElement);
 
             $compile(outerElement)(scope);
+            return outerElement;
+        }
+
+        function generatePeoplePickerElement(element, scope) {
+            var elementId = "pp_" + scope.ngspColumn.Title + "_" + scope.ngspColumn.Id;
+            var outerElement = $("<span></span>");
+            outerElement.attr("id", elementId);
+
+            $compile(outerElement)(scope);
+
+            var schema = {
+                SearchPrincipalSource: 15,
+                ResolvePrincipalSource: 15,
+                MaximumEntitySuggestions: 50,
+                Width: "100%",
+                OnUserResolvedClientScript: onUserResolve
+            };
+
+            schema.Required = scope.ngspColumn.IsRequired
+
+            if (scope.ngspColumn.PeopleOnly) {
+                schema.PrincipalAccountType = "User,DL";
+            }
+            else {
+                schema.PrincipalAccountType = "User,DL,SecGroup,SPGroup";
+            }
+
+            if (scope.ngspColumn.Type === "person") {
+                schema.AllowMultipleValues = false;
+            }
+            else if (scope.ngspColumn.Type === "multiPerson") {
+                schema.AllowMultipleValues = true;
+            }
+            else {
+                console.log(scope.ngspColumn.Type + "is not supported as a column type for people pickers.");
+                return;
+            }
+
+            scope.$watch(element[0].childNodes.length, function () {
+                if ($("#" + elementId).length > 0) {
+                    SPClientPeoplePicker_InitStandaloneControlWrapper(elementId, null, schema);
+                }
+            });
+
+            function onUserResolve() {
+                var peoplePickerDictKey = elementId + "_TopSpan";
+                var peoplePicker = SPClientPeoplePicker.SPClientPeoplePickerDict[peoplePickerDictKey];
+                scope.ngspColumn.InputValue = peoplePicker.GetAllUserInfo();
+            }
 
             return outerElement;
         }
     }
+
+    app.directive("ngspList", angularSpList);
+
+    function angularSpList($compile) {
+        return {
+            restrict: "A",
+            scope: {
+                ngspList: '=',
+            },
+            link: link
+        }
+
+        function link(scope, element, attrs) {
+            scope.ngspList = {};
+            scope.$watch('ngspList', function () {
+                if (scope.ngspList.DisplayName !== undefined && scope.ngspList.Columns !== undefined) {
+                    element.html("");
+                    element.append(generateTitleElement(scope.ngspList));
+                    element.append(generateGridElement());
+                    element.append(generateButtonsElement(element, scope));
+                }
+            });
+        }
+    }
+
 })(angular, jQuery)

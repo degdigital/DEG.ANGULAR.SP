@@ -15,8 +15,17 @@
                 "Type": "link"
             },
             "PersonColumn": {
-                "Type": "person"
-            }
+                "Type": "multiPerson"
+            },
+		    "YesNoColumn": {
+		        "Type": "yesNo"
+		    },
+		    "Developer": {
+                "Type": "choice"
+		    },
+		    "DateTimeColumn": {
+                "Type": "dateTime"
+		    }
 		}
 	}
 }

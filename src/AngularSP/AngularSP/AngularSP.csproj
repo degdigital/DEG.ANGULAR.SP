@@ -53,6 +53,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AngularSP\lib\angular.min.js.map" />
+    <None Include="AngularSP\lib\fonts\glyphicons-halflings-regular.eot" />
+    <None Include="AngularSP\lib\fonts\glyphicons-halflings-regular.ttf" />
+    <None Include="AngularSP\lib\fonts\glyphicons-halflings-regular.woff" />
+    <None Include="AngularSP\lib\fonts\glyphicons-halflings-regular.woff2" />
     <None Include="AngularSP\lib\jquery-1.10.2.min.js.map" />
     <None Include="AngularSP\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{10fe1b36-1288-4ea9-940e-cdaa2e157985}</SharePointProjectItemId>
@@ -74,9 +79,13 @@
     <Content Include="AngularSP\Elements.xml" />
     <Content Include="AngularSP\AngularSP.Directives.js" />
     <Content Include="AngularSP\lib\angular.min.js" />
+    <Content Include="AngularSP\lib\fonts\glyphicons-halflings-regular.svg" />
     <Content Include="AngularSP\lib\images\nicEditorIcons.gif" />
     <Content Include="AngularSP\lib\jquery-1.10.2.min.js" />
     <Content Include="AngularSP\lib\nicEdit.custom.js" />
+    <Content Include="AngularSP\lib\styles\bootstrap.min.css" />
+    <Content Include="AngularSP\lib\ui-bootstrap-tpls-0.12.1.min.js" />
+    <Content Include="AngularSP\ngsp.fixes.css" />
     <Content Include="Features\AngularSP\AngularSP.Template.xml">
       <DependentUpon>AngularSP.feature</DependentUpon>
     </Content>
