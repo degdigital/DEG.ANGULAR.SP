@@ -40,19 +40,20 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
     function angularSpField ($compile) {
         return {
             restrict: "A",
+            require: "ngModel",
             scope: {
-                ngspColumn: '=',
+                ngspColumn: '='
             },
             link: link
         }
 
-        function link(scope, element, attrs) {
+        function link(scope, element, attrs, ngModel) {
             scope.ngspColumn = {};
             scope.$watch('ngspColumn', function () {
                 if (scope.ngspColumn.Title !== undefined && scope.ngspColumn.InputType !== undefined) {
                     element.html("");
                     element.append(generateTitleElement(scope.ngspColumn));
-                    element.append(generateInputElement(element, scope));
+                    element.append(generateInputElement(element, ngModel, scope));
                 }
             });
         }
@@ -63,28 +64,28 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             return titleElement;
         }
 
-        function generateInputElement(element, scope) {
+        function generateInputElement(element, ngModel, scope) {
             switch (scope.ngspColumn.InputType) {
                 case "text":
-                    return generateTextElement(scope);
+                    return generateTextElement(ngModel, scope);
                     break;
                 case "textBox":
-                    return generateTextBoxElement(scope);
+                    return generateTextBoxElement(ngModel, scope);
                     break;
                 case "nicEdit":
-                    return generateNicEditElement(scope);
+                    return generateNicEditElement(ngModel, scope);
                     break;
                 case "dropDown":
-                    return generateDropDownElement(scope);
+                    return generateDropDownElement(ngModel, scope);
                     break;
                 case "checkbox":
-                    return generateCheckboxElement(scope);
+                    return generateCheckboxElement(ngModel, scope);
                     break;
                 case "dateTime":
-                    return generateDateTimeElement(scope);
+                    return generateDateTimeElement(ngModel, scope);
                     break;
                 case "peoplePicker":
-                    return generatePeoplePickerElement(element, scope);
+                    return generatePeoplePickerElement(element, ngModel, scope);
                     break;
                 default:
                     console.log(scope.ngspColumn.InputType + " is currently unsupported as an input type.");
@@ -92,27 +93,73 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             }
         }
 
-        function generateTextElement(scope) {
+        function generateTextElement(ngModel, scope) {
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
+
+            scope.textInputChanged = function () {
+                ngModel.$setViewValue(scope.InputValue);
+            }
+
             var inputElement = $("<input />");
-            inputElement.attr("data-ng-model", "ngspColumn.InputValue");
+            inputElement.attr("data-ng-model", "InputValue");
+            inputElement.attr("data-ng-change", "textInputChanged()");
+            if (scope.ngspColumn.Type === "text") {
+
+            }
+            else if (scope.ngspColumn.Type === "link") {
+
+            }
+            else if (scope.ngspColumn.Type === "number") {
+
+            }
+            else if (scope.ngspColumn.Type === "currency") {
+
+            }
+            else {
+                console.log(scope.ngspColumn.Type + "is not supported as a column type for text input.");
+                return;
+            }
             $compile(inputElement)(scope);
             return inputElement;
         }
 
-        function generateTextBoxElement(scope) {
+        function generateTextBoxElement(ngModel, scope) {
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
+
+            scope.textAreaChanged = function () {
+                ngModel.$setViewValue(scope.InputValue);
+            }
+
             var inputElement = $("<textarea></textarea>");
-            inputElement.attr("data-ng-model", "ngspColumn.InputValue");
+            inputElement.attr("data-ng-model", "InputValue");
+            inputElement.attr("data-ng-change", "textAreaChanged()");
+            if (scope.ngspColumn.Type === "multiText") {
+
+            }
+            else {
+                console.log(scope.ngspColumn.Type + "is not supported as a column type for text box.");
+                return;
+            }
             $compile(inputElement)(scope);
             return inputElement;
         }
 
-        function generateNicEditElement(scope) {
+        function generateNicEditElement(ngModel, scope) {
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
+
             var outerElement = $("<span></span>");
             var panelElement = $("<div></div>");
             outerElement.append(panelElement);
             var contentElement = $("<div></div>");
             contentElement.attr("contenteditable", "true");
-            contentElement.attr("data-ng-model", "ngspColumn.InputValue");
+            contentElement.attr("data-ng-model", "InputValue");
+
             outerElement.append(contentElement);
 
 
@@ -122,14 +169,35 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             nicEditorInstance.setPanel(panelElement[0]);
             nicEditorInstance.addInstance(contentElement[0]);
 
+            if (scope.ngspColumn.Type === "multiText") {
+
+            }
+            else {
+                console.log(scope.ngspColumn.Type + "is not supported as a column type for nicEdit.");
+                return;
+            }
+
             $compile(outerElement)(scope);
+
+            scope.$watch("InputValue", function () {
+                ngModel.$setViewValue(scope.InputValue);
+            })
 
             return outerElement;
         }
 
-        function generateDropDownElement(scope) {
+        function generateDropDownElement(ngModel, scope) {
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
+
+            scope.dropDownChanged = function () {
+                ngModel.$setViewValue(scope.InputValue);
+            }
+
             var inputElement = $("<select></select>");
-            inputElement.attr("data-ng-model", "ngspColumn.InputValue");
+            inputElement.attr("data-ng-model", "InputValue");
+            inputElement.attr("data-ng-change", "dropDownChanged()");
             if (scope.ngspColumn.Type === "choice") {
                 inputElement.attr("data-ng-options", "choice for choice in ngspColumn.Choices");
             }
@@ -147,27 +215,40 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             return inputElement;
         }
 
-        function generateCheckboxElement(scope) {
+        function generateCheckboxElement(ngModel, scope) {
+
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
+            else {
+                scope.InputValue = {};
+            }
+
+            scope.checkboxChanged = function () {
+                ngModel.$setViewValue(scope.InputValue);
+            }
+
             var outerElement = $("<span></span>");
             if (scope.ngspColumn.Type === "multiMetadata" || scope.ngspColumn.Type === "multiLookup" || scope.ngspColumn.Type === "multiChoice") {
                 var repeatElement = $("<span></span>");
                 var inputElement = $("<input />");
+                inputElement.attr("data-ng-change", "checkboxChanged()");
                 var labelElement = $("<label></label>");
                 inputElement.attr("type", "checkbox");
                 if (scope.ngspColumn.Type === "multiMetadata")
                 {
                     repeatElement.attr("data-ng-repeat", "term in ngspColumn.Terms");
-                    inputElement.attr("data-ng-model", "ngspColumn.InputValue[term.id]");
+                    inputElement.attr("data-ng-model", "InputValue[term.id]");
                     labelElement.text("{{term.label}}");
                 }
                 else if (scope.ngspColumn.Type === "multiLookup") {
                     repeatElement.attr("data-ng-repeat", "lookupItem in ngspColumn.LookupItems");
-                    inputElement.attr("data-ng-model", "ngspColumn.InputValue[lookupItem.id]");
+                    inputElement.attr("data-ng-model", "InputValue[lookupItem.id]");
                     labelElement.text("{{lookupItem.label}}");
                 }
                 else if (scope.ngspColumn.Type === "multiChoice") {
                     repeatElement.attr("data-ng-repeat", "choice in ngspColumn.Choices");
-                    inputElement.attr("data-ng-model", "ngspColumn.InputValue[choice]");
+                    inputElement.attr("data-ng-model", "InputValue[choice]");
                     labelElement.text("{{choice}}");
                 }
                 repeatElement.append(inputElement);
@@ -176,7 +257,8 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             else if (scope.ngspColumn.Type === "yesNo") {
                 var inputElement = $("<input />");
                 inputElement.attr("type", "checkbox");
-                inputElement.attr("data-ng-model", "ngspColumn.InputValue");
+                inputElement.attr("data-ng-model", "InputValue");
+                inputElement.attr("data-ng-change", "checkboxChanged()");
                 outerElement.append(inputElement);
             }
             else {
@@ -188,7 +270,42 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             return outerElement;
         }
 
-        function generateDateTimeElement(scope) {
+        function generateRadioElement(ngModel, scope) {
+            var outerElement = $("<span></span>");
+
+            if (scope.ngspColumn.Type === "yesNo") {
+                console.log("Radio input is not implemented yet for yesNo.");
+                return;
+            }
+            else if (scope.ngspColumn.Type === "choice") {
+                console.log("Radio input is not implemented yet for choice.");
+                return;
+            }
+            else if (scope.ngspColumn.Type === "lookup") {
+                console.log("Radio input is not implemented yet for lookup.");
+                return;
+            }
+            else if (scope.ngspColumn.Type === "metadata") {
+                console.log("Radio input is not implemented yet for metadata.");
+                return;
+            }
+            else {
+                console.log(scope.ngspColumn.Type + "is not supported as a column type for radio input.");
+                return;
+            }
+
+            $compile(outerElement)(scope);
+            return outerElement;
+        }
+
+        function generateDateTimeElement(ngModel, scope) {
+            scope.InputValue = {};
+
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue.Date = ngModel.$viewValue;
+                scope.InputValue.Time = ngModel.$viewValue;
+            }
+
             scope.calendarOpened = false;
             scope.calendarFormat = "yyyy-MM-dd";
 
@@ -196,6 +313,21 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
                 $event.preventDefault();
                 $event.stopPropagation();
                 scope.calendarOpened = true;
+            }
+
+            scope.dateTimeChanged = function () {
+                var dateTimeValue = new Date();
+                if (scope.InputValue.Date !== undefined) {
+                    dateTimeValue.setFullYear(scope.InputValue.Date.getFullYear());
+                    dateTimeValue.setMonth(scope.InputValue.Date.getMonth());
+                    dateTimeValue.setDate(scope.InputValue.Date.getDate());
+                }
+                if (scope.InputValue.Time !== undefined) {
+                    dateTimeValue.setHours(scope.InputValue.Time.getHours());
+                    dateTimeValue.setMinutes(scope.InputValue.Time.getMinutes());
+                }
+                dateTimeValue.setSeconds(0);
+                ngModel.$setViewValue(dateTimeValue);
             }
 
             var outerElement = $("<span></span>");
@@ -206,9 +338,10 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
 
             var dateTextInputElement = $("<input />");
             dateTextInputElement.attr("class", "form-control");
-            dateTextInputElement.attr("data-ng-model", "ngspColumn.InputValue.Date");
+            dateTextInputElement.attr("data-ng-model", "InputValue.Date");
             dateTextInputElement.attr("data-datepicker-popup", "{{calendarFormat}}");
             dateTextInputElement.attr("data-is-open", "calendarOpened");
+            dateTextInputElement.attr("data-ng-change", "dateTimeChanged()");
             //dateTextInputElement.attr("data-min-date", "'2015-01-01'");
             //dateTextInputElement.attr("data-max-date", "'2015-06-22'");
 
@@ -232,7 +365,8 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             outerElement.append(dateElement);
 
             var timeElement = $("<timepicker></timepicker>");
-            timeElement.attr("data-ng-model", "ngspColumn.InputValue.Time");
+            timeElement.attr("data-ng-model", "InputValue.Time");
+            timeElement.attr("data-ng-change", "dateTimeChanged()");
 
             outerElement.append(timeElement);
 
@@ -240,7 +374,15 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             return outerElement;
         }
 
-        function generatePeoplePickerElement(element, scope) {
+        function generatePeoplePickerElement(element, ngModel, scope) {
+
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
+            else {
+                scope.InputValue = null;
+            }
+
             var elementId = "pp_" + scope.ngspColumn.Title + "_" + scope.ngspColumn.Id;
             var outerElement = $("<span></span>");
             outerElement.attr("id", elementId);
@@ -277,14 +419,15 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
 
             scope.$watch(element[0].childNodes.length, function () {
                 if ($("#" + elementId).length > 0) {
-                    SPClientPeoplePicker_InitStandaloneControlWrapper(elementId, null, schema);
+                    SPClientPeoplePicker_InitStandaloneControlWrapper(elementId, scope.InputValue, schema);
                 }
             });
 
             function onUserResolve() {
                 var peoplePickerDictKey = elementId + "_TopSpan";
                 var peoplePicker = SPClientPeoplePicker.SPClientPeoplePickerDict[peoplePickerDictKey];
-                scope.ngspColumn.InputValue = peoplePicker.GetAllUserInfo();
+                scope.InputValue = peoplePicker.GetAllUserInfo();
+                ngModel.$setViewValue(scope.InputValue);
             }
 
             return outerElement;

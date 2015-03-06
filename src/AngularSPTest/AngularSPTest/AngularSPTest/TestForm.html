@@ -60,18 +60,18 @@
     <div data-ng-controller="testFormController">
         <div data-ng-hide="showForm"><img src="/_layouts/15/images/gears_anv4.gif" /></div>
         <div data-ng-show="showForm">
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Title"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.RichTextColumn"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.ChoiceColumn"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.LookupColumn"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MetadataColumn"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MultiMetadataColumn"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.PersonColumn"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.YesNoColumn"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Developer"></div>
-            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.DateTimeColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Title" data-ng-model="AngularSPTestList.Title"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.RichTextColumn" data-ng-model="AngularSPTestList.RichTextColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.ChoiceColumn" data-ng-model="AngularSPTestList.ChoiceColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.LookupColumn" data-ng-model="AngularSPTestList.LookupColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MetadataColumn" data-ng-model="AngularSPTestList.MetadataColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.MultiMetadataColumn" data-ng-model="AngularSPTestList.MultiMetadataColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.PersonColumn" data-ng-model="AngularSPTestList.PersonColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.YesNoColumn" data-ng-model="AngularSPTestList.YesNoColumn"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Developer" data-ng-model="AngularSPTestList.Developer"></div>
+            <div data-ngsp-column="listsInfo.AngularSPTestList.Columns.DateTimeColumn" data-ng-model="AngularSPTestList.DateTimeColumn"></div>
             <div>
-                <input type="button" ng-click="Submit(listsInfo.AngularSPTestList.Columns)" value="Submit" />
+                <input type="button" ng-click="Submit(AngularSPTestList)" value="Submit" />
             </div>
         </div>
     </div>
