@@ -100,16 +100,58 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
 
         function createListItem(listName, itemProps) {
             var createDeferred = $q.defer();
-
-            if (listDefinitions !== undefined) {
-                if (listDefinitions[listName] !== undefined) {
-                    var listDef = listDefinitions[listName];
-                    var columns = listDef.Columns;
-
+            console.log(listName);
+            var listInfo;
+            if (listsInfo !== undefined) {
+                if (listsInfo[listName] !== undefined) {
+                    listInfo = listsInfo[listName];
+                    SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                        SP.SOD.executeFunc('sp.taxonomy.js', 'SP.Taxonomy.TaxonomySession', function () {
+                            SP.SOD.executeFunc('SP.UserProfiles.js', 'SP.UserProfiles.PeopleManager', sharePointReady);
+                        });
+                    });
                 }
+            }
+            else {
+
             }
 
             return createDeferred.promise;
+
+            function sharePointReady() {
+                //console.log(listsInfo);
+                //console.log(listName);
+                //var listInfo = listsInfo[listName];
+                //console.log(listInfo);
+                var listName = listInfo.DisplayName;
+
+                var context = SP.ClientContext.get_current();
+                var web = context.get_web();
+                var spList = web.get_lists().getByTitle(listName);
+                var itemCreationInfo = new SP.ListItemCreationInformation();
+                var listItem = spList.addItem(itemCreationInfo);
+                
+                var columns = listInfo.Columns;
+                for (var columnName in columns) {
+                    if (columns.hasOwnProperty(columnName)) {
+                        var columnInfo = columns[columnName];
+                        if (itemProps[columnName] !== undefined) {
+                            var inputValue = itemProps[columnName];
+                            var itemValue = getListItemValue(columnInfo, inputValue);
+                            //console.log(columnName);
+                            //console.log(itemValue);
+                            listItem.set_item(columnName, itemValue);
+                        }
+                    }
+                }
+                listItem.update();
+                context.load(listItem);
+                context.executeQueryAsync(function () {
+                    createDeferred.resolve(listItem.get_id());
+                }, function (sender, args) {
+                    createDeferred.reject(args.get_message());
+                });
+            }
         }
 
         function createListItems(listName, itemsProps) {
@@ -120,8 +162,68 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             return createDeferred.promise;
         }
 
-        function getListItem(listName, ItemId) {
+        function getListItem(listName, itemId) {
+            var listItemDeferred = $q.defer();
 
+            var listInfo;
+            var listItemId;
+
+            if (listsInfo !== undefined) {
+                if (listsInfo[listName] !== undefined) {
+                    listInfo = listsInfo[listName];
+                    listItemId = itemId;
+                    SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                        SP.SOD.executeFunc('sp.taxonomy.js', 'SP.Taxonomy.TaxonomySession', function () {
+                            SP.SOD.executeFunc('SP.UserProfiles.js', 'SP.UserProfiles.PeopleManager', sharePointReady);
+                        });
+                    });
+                }
+            }
+            else {
+
+            }
+
+            return listItemDeferred.promise;
+
+            function sharePointReady() {
+                var listName = listInfo.DisplayName;
+
+                var context = SP.ClientContext.get_current();
+                var web = context.get_web();
+                var spList = web.get_lists().getByTitle(listName);
+                var spItem = spList.getItemById(listItemId);
+                context.load(spItem);
+                context.executeQueryAsync(function () {
+                    var columns = listInfo.Columns;
+                    var spItemValues = spItem.get_fieldValues();
+                    var inputValues = {};
+                    var peopleLookups = [];
+                    for (var columnName in columns) {
+                        if (columns.hasOwnProperty(columnName)) {
+                            var columnInfo = columns[columnName];
+                            if (spItemValues[columnName] !== undefined) {
+                                var spItemValue = spItemValues[columnName];
+                                var inputValue = getInputValue(columnInfo, spItemValue, peopleLookups);
+                                inputValues[columnName] = inputValue;
+                                //console.log(columnName);
+                                //console.log(inputValues[columnName]);
+                            }
+                        }
+                    }
+                    if (peopleLookups.length > 0) {
+                        context.executeQueryAsync(function () {
+                            peopleLookups.forEach(function (peopleLookup) {
+                                peopleLookup.Callback(peopleLookup.Values, peopleLookup.RawResults);
+                            });
+                            listItemDeferred.resolve(inputValues);
+                        }, function (sender, args) {
+                            listItemDeferred.reject(args.get_message());
+                        });
+                    }
+                }, function (sender, args) {
+                    listItemDeferred.reject(args.get_message());
+                });
+            }
         }
 
         function getListItems(listName, params) {
@@ -154,6 +256,190 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         }
 
         /**/
+
+        function getListItemValue(columnInfo, inputValue) {
+            var itemValue = null;
+            switch (columnInfo.Type) {
+                case "text":
+                case "choice":
+                case "multiText":
+                case "link":
+                case "number":
+                case "currency":
+                    itemValue = inputValue;
+                    break;
+                case "multiChoice":
+                    itemValue = [];
+                    for (var value in inputValue) {
+                        if (inputValue.hasOwnProperty(value)) {
+                            if (inputValue[value]) {
+                                itemValue.push(value);
+                            }
+                        }
+                    }
+                    break;
+                case "lookup":
+                    itemValue = new SP.FieldLookupValue();
+                    itemValue.set_lookupId(inputValue);
+                    break;
+                case "multiLookup":
+                    itemValue = [];
+                    for (var value in inputValue) {
+                        if (inputValue.hasOwnProperty(value)) {
+                            if (inputValue[value]) {
+                                var lookupValue = new SP.FieldLookupValue();
+                                lookupValue.set_lookupId(value);
+                                itemValue.push(lookupValue);
+                            }
+                        }
+                    }
+                    break;
+                case "yesNo":
+                    if (inputValue) {
+                        itemValue = 1;
+                    }
+                    else {
+                        itemValue = 0;
+                    }
+                    break;
+                case "person":
+                    if (inputValue.length === 1) {
+                        var person = inputValue[0];
+                        itemValue = SP.FieldUserValue.fromUser(person.Key);
+                    }
+                    else if (inputValue.length !== 0) {
+                        //should be multiPerson
+                    }
+                    break;
+                case "multiPerson":
+                    itemValue = [];
+                    for (var i = 0; i < inputValue.length; i++) {
+                        var person = inputValue[i];
+                        itemValue.push(SP.FieldUserValue.fromUser(person.Key));
+                    }
+                    break;
+                case "metadata":
+                    var metadataItem = columnInfo.TermsById[inputValue];
+                    itemValue = metadataItem.label + "|" + metadataItem.id;
+                    break;
+                case "multiMetadata":
+                    var metadataValues = [];
+                    for (var value in inputValue) {
+                        if (inputValue.hasOwnProperty(value)) {
+                            if (inputValue[value]) {
+                                var metadataItem = columnInfo.TermsById[value];
+                                metadataValues.push("-1");
+                                metadataValues.push(metadataItem.label + "|" + metadataItem.id);
+                            }
+                        }
+                    }
+                    itemValue = metadataValues.join(";#");
+                    break;
+                case "dateTime":
+                    itemValue = inputValue.toISOString();
+                    break;
+                default:
+                    break;
+            }
+            return itemValue;
+        }
+
+        function getInputValue(columnInfo, itemValue, peopleLookups) {
+            var inputValue;
+            switch (columnInfo.Type) {
+                case "text":
+                case "choice":
+                case "multiText":
+                case "link":
+                case "number":
+                case "currency":
+                    inputValue = itemValue;
+                    break;
+                case "multiChoice":
+                    inputValue = {};
+                    for (var i = 0; i < itemValue.length; i++) {
+                        var value = itemValue[i];
+                        inputValue[value] = true;
+                    }
+                    break;
+                case "lookup":
+                    inputValue = itemValue.get_lookupId();
+                    break;
+                case "multiLookup":
+                    inputValue = {};
+                    for (var i = 0; i < itemValue.length; i++) {
+                        var value = itemValue[i].get_lookupId();
+                        inputValue[value] = true;
+                    }
+                    break;
+                case "yesNo":
+                    if (itemValue === 1) {
+                        inputValue = true;
+                    }
+                    else {
+                        inputValue = false;
+                    }
+                    break;
+                case "person":
+                    inputValue = [];
+                    var context = SP.ClientContext.get_current();
+                    var web = context.get_web();
+                    var rawValue = web.getUserById(itemValue.get_lookupId());
+                    context.load(rawValue);
+                    peopleLookups.push({ Values: inputValue, RawResults: rawValue, Callback: setPersonInputValue });
+                    break;
+                case "multiPerson":
+                    inputValue = [];
+                    var context = SP.ClientContext.get_current();
+                    var web = context.get_web();
+                    var rawValues = [];
+                    for (var i = 0; i < itemValue.length; i++) {
+                        var rawValue = web.getUserById(itemValue[i].get_lookupId());
+                        context.load(rawValue);
+                        rawValues.push(rawValue);
+                    }
+                    peopleLookups.push({ Values: inputValue, RawResults: rawValues, Callback: setPersonInputValue });
+                    break;
+                case "metadata":
+                    inputValue = itemValue.get_termGuid()
+                    break;
+                case "multiMetadata":
+                    inputValue = {};
+                    for (var i = 0; i < itemValue.get_count() ; i++) {
+                        var value = itemValue.getItemAtIndex(i);
+                        inputValue[value.get_termGuid()] = true;
+                    }
+                    break;
+                case "dateTime":
+                    inputValue = new Date(itemValue);
+                    break;
+                default:
+                    break;
+            }
+            return inputValue;
+        }
+
+        function setPersonInputValue(values, rawResults) {
+            if (rawResults.length > 0) {
+                rawResults.forEach(addPersonToValues);
+            }
+            else {
+                addPersonToValues(rawResults);
+            }
+            function addPersonToValues(result) {
+                var person = {
+                    AutoFillDisplayText: result.get_title(),
+                    AutoFillKey: result.get_loginName(),
+                    Description: result.get_email(),
+                    DisplayText: result.get_title(),
+                    EntityType: "User",
+                    IsResolved: true,
+                    Key: result.get_loginName(),
+                    Resolved: true
+                }
+                values.push(person);
+            }
+        }
 
         function cascadeColumnProperties(columnsInfo, cTypesInfo, listsInfo) {
             cascadeListsInfoProperties(columnsInfo, listsInfo);

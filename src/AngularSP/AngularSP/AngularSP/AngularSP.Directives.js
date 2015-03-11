@@ -42,7 +42,8 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             restrict: "A",
             require: "ngModel",
             scope: {
-                ngspColumn: '='
+                ngspColumn: '=',
+                ngModel: '='
             },
             link: link
         }
@@ -94,9 +95,13 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         }
 
         function generateTextElement(ngModel, scope) {
-            if (ngModel.$viewValue !== undefined) {
-                scope.InputValue = ngModel.$viewValue;
-            }
+            //if (ngModel.$viewValue !== undefined) {
+            //    scope.InputValue = ngModel.$viewValue;
+            //}
+
+            ngModel.$formatters.push(function (value) {
+                scope.InputValue = value;
+            });
 
             scope.textInputChanged = function () {
                 ngModel.$setViewValue(scope.InputValue);
@@ -126,9 +131,13 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         }
 
         function generateTextBoxElement(ngModel, scope) {
-            if (ngModel.$viewValue !== undefined) {
-                scope.InputValue = ngModel.$viewValue;
-            }
+            //if (ngModel.$viewValue !== undefined) {
+            //    scope.InputValue = ngModel.$viewValue;
+            //}
+
+            ngModel.$formatters.push(function (value) {
+                scope.InputValue = value;
+            });
 
             scope.textAreaChanged = function () {
                 ngModel.$setViewValue(scope.InputValue);
@@ -149,9 +158,13 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         }
 
         function generateNicEditElement(ngModel, scope) {
-            if (ngModel.$viewValue !== undefined) {
-                scope.InputValue = ngModel.$viewValue;
-            }
+            //if (ngModel.$viewValue !== undefined) {
+            //    scope.InputValue = ngModel.$viewValue;
+            //}
+
+            ngModel.$formatters.push(function (value) {
+                scope.InputValue = value;
+            });
 
             var outerElement = $("<span></span>");
             var panelElement = $("<div></div>");
@@ -187,9 +200,9 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         }
 
         function generateDropDownElement(ngModel, scope) {
-            if (ngModel.$viewValue !== undefined) {
-                scope.InputValue = ngModel.$viewValue;
-            }
+            ngModel.$formatters.push(function (value) {
+                scope.InputValue = value;
+            });
 
             scope.dropDownChanged = function () {
                 ngModel.$setViewValue(scope.InputValue);
@@ -217,12 +230,16 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
 
         function generateCheckboxElement(ngModel, scope) {
 
-            if (ngModel.$viewValue !== undefined) {
-                scope.InputValue = ngModel.$viewValue;
-            }
-            else {
-                scope.InputValue = {};
-            }
+            //if (ngModel.$viewValue !== undefined) {
+            //    scope.InputValue = ngModel.$viewValue;
+            //}
+            //else {
+            //    scope.InputValue = {};
+            //}
+
+            ngModel.$formatters.push(function (value) {
+                scope.InputValue = value;
+            });
 
             scope.checkboxChanged = function () {
                 ngModel.$setViewValue(scope.InputValue);
@@ -271,6 +288,11 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         }
 
         function generateRadioElement(ngModel, scope) {
+
+            ngModel.$formatters.push(function (value) {
+                scope.InputValue = value;
+            });
+
             var outerElement = $("<span></span>");
 
             if (scope.ngspColumn.Type === "yesNo") {
@@ -301,10 +323,10 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         function generateDateTimeElement(ngModel, scope) {
             scope.InputValue = {};
 
-            if (ngModel.$viewValue !== undefined) {
-                scope.InputValue.Date = ngModel.$viewValue;
-                scope.InputValue.Time = ngModel.$viewValue;
-            }
+            ngModel.$formatters.push(function (value) {
+                scope.InputValue.Date = value;
+                scope.InputValue.Time = value;
+            });
 
             scope.calendarOpened = false;
             scope.calendarFormat = "yyyy-MM-dd";
@@ -417,9 +439,16 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
                 return;
             }
 
+            
+
             scope.$watch(element[0].childNodes.length, function () {
-                if ($("#" + elementId).length > 0) {
+                var ppElement = $("#" + elementId);
+                if (ppElement.length > 0) {
                     SPClientPeoplePicker_InitStandaloneControlWrapper(elementId, scope.InputValue, schema);
+                    ngModel.$formatters.push(function (value) {
+                        //ppElement.html("");
+                        SPClientPeoplePicker_InitStandaloneControlWrapper(elementId, value, schema);
+                    });
                 }
             });
 
@@ -427,6 +456,7 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
                 var peoplePickerDictKey = elementId + "_TopSpan";
                 var peoplePicker = SPClientPeoplePicker.SPClientPeoplePickerDict[peoplePickerDictKey];
                 scope.InputValue = peoplePicker.GetAllUserInfo();
+                //console.log(scope.InputValue);
                 ngModel.$setViewValue(scope.InputValue);
             }
 
