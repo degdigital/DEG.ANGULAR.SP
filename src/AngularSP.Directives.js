@@ -1,5 +1,4 @@
-﻿'use strict';
-
+﻿
 var app = app || angular.module("angularSP", ['ui.bootstrap']);
 
 (function (ng, $) {

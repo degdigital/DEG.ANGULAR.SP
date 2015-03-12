@@ -1,5 +1,4 @@
-﻿'use strict';
-
+﻿
 var app = app || angular.module("angularSP", ['ui.bootstrap']);
 
 (function (ng, $) {
@@ -203,8 +202,10 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
                             var columnInfo = columns[columnName];
                             if (spItemValues[columnName] !== undefined) {
                                 var spItemValue = spItemValues[columnName];
-                                var inputValue = getInputValue(columnInfo, spItemValue, peopleLookups);
-                                inputValues[columnName] = inputValue;
+                                if (spItemValue !== null) {
+                                    var inputValue = getInputValue(columnInfo, spItemValue, peopleLookups);
+                                    inputValues[columnName] = inputValue;
+                                }
                                 //console.log(columnName);
                                 //console.log(inputValues[columnName]);
                             }
@@ -220,6 +221,9 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
                             listItemDeferred.reject(args.get_message());
                         });
                     }
+                    else {
+                        listItemDeferred.resolve(inputValues);
+                    }
                 }, function (sender, args) {
                     listItemDeferred.reject(args.get_message());
                 });
@@ -230,7 +234,7 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
 
         }
 
-        function updateListItem(listName, itemProps) {
+        function updateListItem(listName, itemProps, overrideConflict) {
 
         }
 
@@ -423,7 +427,7 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             if (rawResults.length > 0) {
                 rawResults.forEach(addPersonToValues);
             }
-            else {
+            else if(rawResults !== null) {
                 addPersonToValues(rawResults);
             }
             function addPersonToValues(result) {
