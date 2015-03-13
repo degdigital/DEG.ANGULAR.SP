@@ -78,6 +78,9 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
                 case "dropDown":
                     return generateDropDownElement(ngModel, scope);
                     break;
+                case "radio":
+                    return generateRadioElement(ngModel, scope);
+                    break;
                 case "checkbox":
                     return generateCheckboxElement(ngModel, scope);
                     break;
@@ -292,23 +295,95 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
                 scope.InputValue = value;
             });
 
+            scope.radioChanged = function () {
+                console.log(scope.InputValue);
+                if (scope.ngspColumn.Type === "yesNo") {
+                    if (scope.InputValue === "yes") {
+                        ngModel.$setViewValue(true);
+                    }
+                    else {
+                        ngModel.$setViewValue(false);
+                    }
+                }
+                else {
+                    ngModel.$setViewValue(scope.InputValue);
+                }
+            }
+
             var outerElement = $("<span></span>");
 
+            var radioName = scope.ngspColumn.Title;
+
             if (scope.ngspColumn.Type === "yesNo") {
-                console.log("Radio input is not implemented yet for yesNo.");
-                return;
+                var outerYesElement = $("<span></span>");
+                var yesElement = $("<input></input>");
+                yesElement.attr("type", "radio");
+                yesElement.attr("data-ng-model", "InputValue");
+                yesElement.attr("data-ng-change", "radioChanged()");
+                yesElement.attr("name", radioName);
+                yesElement.attr("value", "yes");
+                outerYesElement.append(yesElement);
+                var yesLabel = $("<label></label>");
+                yesLabel.text("Yes");
+                outerYesElement.append(yesLabel);
+                var outerNoElement = $("<span></span>");
+                var noElement = $("<input></input>");
+                noElement.attr("type", "radio");
+                noElement.attr("data-ng-model", "InputValue");
+                noElement.attr("data-ng-change", "radioChanged()");
+                noElement.attr("name", radioName);
+                noElement.attr("value", "no");
+                outerNoElement.append(noElement);
+                var noLabel = $("<label></label>");
+                noLabel.text("No");
+                outerNoElement.append(noLabel);
+                outerElement.append(outerYesElement);
+                outerElement.append(outerNoElement);
             }
             else if (scope.ngspColumn.Type === "choice") {
-                console.log("Radio input is not implemented yet for choice.");
-                return;
+                var outerChoiceElement = $("<span></span>");
+                outerChoiceElement.attr("data-ng-repeat", "choice in ngspColumn.Choices");
+                var inputElement = $("<input></input>");
+                inputElement.attr("type", "radio");
+                inputElement.attr("data-ng-change", "radioChanged()");
+                inputElement.attr("data-ng-model", "$parent.InputValue");
+                inputElement.attr("name", radioName);
+                inputElement.attr("value", "{{choice}}");
+                var labelElement = $("<label></label>");
+                labelElement.text("{{choice}}");
+                outerChoiceElement.append(inputElement);
+                outerChoiceElement.append(labelElement);
+                outerElement.append(outerChoiceElement);
             }
             else if (scope.ngspColumn.Type === "lookup") {
-                console.log("Radio input is not implemented yet for lookup.");
-                return;
+                var outerLookupElement = $("<span></span>");
+                outerLookupElement.attr("data-ng-repeat", "lookupItem in ngspColumn.LookupItems");
+                var inputElement = $("<input></input>");
+                inputElement.attr("type", "radio");
+                inputElement.attr("data-ng-change", "radioChanged()");
+                inputElement.attr("data-ng-model", "$parent.InputValue");
+                inputElement.attr("name", radioName);
+                inputElement.attr("value", "{{lookupItem.id}}");
+                var labelElement = $("<label></label>");
+                labelElement.text("{{lookupItem.label}}");
+                outerLookupElement.append(inputElement);
+                outerLookupElement.append(labelElement);
+                outerElement.append(outerLookupElement);
             }
             else if (scope.ngspColumn.Type === "metadata") {
-                console.log("Radio input is not implemented yet for metadata.");
-                return;
+                var outerMetadataElement = $("<span></span>");
+                outerMetadataElement.attr("data-ng-repeat", "term in ngspColumn.Terms");
+                var inputElement = $("<input></input>");
+                inputElement.attr("type", "radio");
+                inputElement.attr("data-ng-change", "radioChanged()");
+                inputElement.attr("data-ng-model", "$parent.InputValue");
+                inputElement.attr("name", radioName);
+                inputElement.attr("value", "{{term.id}}");
+                var labelElement = $("<label></label>");
+                labelElement.text("{{term.label}}");
+                outerMetadataElement.append(inputElement);
+                outerMetadataElement.append(labelElement);
+                outerElement.append(outerMetadataElement);
             }
             else {
                 console.log(scope.ngspColumn.Type + "is not supported as a column type for radio input.");
