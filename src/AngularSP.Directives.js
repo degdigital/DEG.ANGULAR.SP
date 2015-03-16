@@ -42,7 +42,7 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             require: "ngModel",
             scope: {
                 ngspColumn: '=',
-                ngModel: '='
+                ngspReadOnly: '='
             },
             link: link
         }
@@ -50,10 +50,15 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         function link(scope, element, attrs, ngModel) {
             scope.ngspColumn = {};
             scope.$watch('ngspColumn', function () {
-                if (scope.ngspColumn.Title !== undefined && scope.ngspColumn.InputType !== undefined) {
+                if (scope.ngspColumn.Title !== undefined) {
                     element.html("");
                     element.append(generateTitleElement(scope.ngspColumn));
-                    element.append(generateInputElement(element, ngModel, scope));
+                    if (scope.ngspReadOnly !== undefined && scope.ngspReadOnly) {
+                        element.append(generateDisplayElement(ngModel, scope));
+                    }
+                    else{
+                        element.append(generateInputElement(element, ngModel, scope));
+                    }
                 }
             });
         }
@@ -296,7 +301,6 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             });
 
             scope.radioChanged = function () {
-                console.log(scope.InputValue);
                 if (scope.ngspColumn.Type === "yesNo") {
                     if (scope.InputValue === "yes") {
                         ngModel.$setViewValue(true);
@@ -535,6 +539,296 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             }
 
             return outerElement;
+        }
+
+        function generateDisplayElement(ngModel, scope) {
+            switch (scope.ngspColumn.Type) {
+                case "text":
+                    return generateTextDisplayElement(ngModel, scope);
+                    break;
+                case "multiText":
+                    return generateMultiTextDisplayElement(ngModel, scope);
+                    break;
+                case "choice":
+                    return generateChoiceDisplayElement(ngModel, scope);
+                    break;
+                case "multiChoice":
+                    return generateMultiChoiceDisplayElement(ngModel, scope);
+                    break;
+                case "lookup":
+                    return generateLookupDisplayElement(ngModel, scope);
+                    break;
+                case "multiLookup":
+                    return generateMultiLookupDisplayElement(ngModel, scope);
+                    break;
+                case "yesNo":
+                    return generateYesNoDisplayElement(ngModel, scope);
+                    break;
+                case "person":
+                case "multiPerson":
+                    return generatePersonDisplayElement(ngModel, scope);
+                    break;
+                    break;
+                case "metadata":
+                    return generateMetadataDisplayElement(ngModel, scope);
+                    break;
+                case "multiMetadata":
+                    return generateMultiMetadataDisplayElement(ngModel, scope);
+                    break;
+                case "link":
+                    return generateLinkDisplayElement(ngModel, scope);
+                    break;
+                case "number":
+                    return generateNumberDisplayElement(ngModel, scope);
+                    break;
+                case "currency":
+                    return generateCurrencyDisplayElement(ngModel, scope);
+                    break;
+                case "dateTime":
+                    return generateDateTimeDisplayElement(ngModel, scope);
+                    break;
+                default:
+                    console.log(scope.ngspColumn.Type + " is currently unsupported as a column type.");
+                    break;
+            }
+
+            function generateTextDisplayElement(ngModel, scope) {
+                scope.DisplayValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = value;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+
+            function generateMultiTextDisplayElement(ngModel, scope) {
+                scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = value;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.attr("data-ng-bind-html", "DisplayValue");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+
+            function generateChoiceDisplayElement(ngModel, scope) {
+                scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = value;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+
+            function generateMultiChoiceDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    var choices = [];
+                    for (var key in value) {
+                        if (value[key]) {
+                            choices.push(key);
+                        }
+                    }
+                    scope.DisplayValue = choices.join("; ");
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+            
+            function generateLookupDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = scope.ngspColumn.LookupItemsById[value].label;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+
+            function generateMultiLookupDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    var lookupLabels = [];
+                    for (var key in value) {
+                        if (value[key]) {
+                            var lookupLabel = scope.ngspColumn.LookupItemsById[key].label;
+                            lookupLabels.push(lookupLabel);
+                        }
+                    }
+                    scope.DisplayValue = lookupLabels.join("; ");
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+
+            function generateYesNoDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    if (value) {
+                        scope.DisplayValue = "Yes";
+                    }
+                    else {
+                        scope.DisplayValue = "No";
+                    }
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+
+            function generatePersonDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    var people = [];
+                    value.forEach(function (person) {
+                        people.push(person.AutoFillDisplayText);
+                    });
+                    scope.DisplayValue = people.join("; ");
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+            
+            function generateMetadataDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = scope.ngspColumn.TermsById[value].label;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+            
+            function generateMultiMetadataDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    var metadataLabels = [];
+                    for (var key in value) {
+                        if (value[key]) {
+                            var metadataLabel = scope.ngspColumn.TermsById[key].label;
+                            metadataLabels.push(metadataLabel);
+                        }
+                    }
+                    scope.DisplayValue = metadataLabels.join("; ");
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+            
+            function generateLinkDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = value;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+            
+            function generateNumberDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = value;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+            
+            function generateCurrencyDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = value;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
+
+            function generateDateTimeDisplayElement(ngModel, scope) {
+                //scope.InputValue = ngModel.$viewValue;
+
+                ngModel.$formatters.push(function (value) {
+                    scope.DisplayValue = value;
+                });
+
+                var outerElement = $("<span></span>");
+                outerElement.text("{{DisplayValue}}");
+
+                $compile(outerElement)(scope);
+
+                return outerElement;
+            }
         }
     }
 

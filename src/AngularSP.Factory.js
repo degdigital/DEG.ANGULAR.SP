@@ -155,10 +155,68 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
 
         function createListItems(listName, itemsProps) {
             var createDeferred = $q.defer();
+            console.log(listName);
+            var listInfo;
+            if (listsInfo !== undefined) {
+                if (listsInfo[listName] !== undefined) {
+                    listInfo = listsInfo[listName];
+                    SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                        SP.SOD.executeFunc('sp.taxonomy.js', 'SP.Taxonomy.TaxonomySession', function () {
+                            SP.SOD.executeFunc('SP.UserProfiles.js', 'SP.UserProfiles.PeopleManager', sharePointReady);
+                        });
+                    });
+                }
+            }
+            else {
 
-
+            }
 
             return createDeferred.promise;
+
+            function sharePointReady() {
+                //console.log(listsInfo);
+                //console.log(listName);
+                //var listInfo = listsInfo[listName];
+                //console.log(listInfo);
+                var listName = listInfo.DisplayName;
+
+                var context = SP.ClientContext.get_current();
+                var web = context.get_web();
+                var spList = web.get_lists().getByTitle(listName);
+                var itemCreationInfo = new SP.ListItemCreationInformation();
+                var listItems = [];
+                for (var i = 0; i < itemsProps.length; i++) {
+                    var itemProps = itemsProps[i];
+
+                    var listItem = spList.addItem(itemCreationInfo);
+
+                    var columns = listInfo.Columns;
+                    for (var columnName in columns) {
+                        if (columns.hasOwnProperty(columnName)) {
+                            var columnInfo = columns[columnName];
+                            if (itemProps[columnName] !== undefined) {
+                                var inputValue = itemProps[columnName];
+                                var itemValue = getListItemValue(columnInfo, inputValue);
+                                //console.log(columnName);
+                                //console.log(itemValue);
+                                listItem.set_item(columnName, itemValue);
+                            }
+                        }
+                    }
+                    listItem.update();
+                    listItems.push(listItem);
+                    context.load(listItem);
+                }
+                context.executeQueryAsync(function () {
+                    var itemIds = [];
+                    listItems.forEach(function (listItem) {
+                        itemIds.push(listItem.get_id());
+                    });
+                    createDeferred.resolve(itemIds);
+                }, function (sender, args) {
+                    createDeferred.reject(args.get_message());
+                });
+            }
         }
 
         function getListItem(listName, itemId) {
@@ -235,28 +293,36 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         }
 
         function updateListItem(listName, itemProps, overrideConflict) {
-
+            
         }
 
         function deleteListItem(listName, itemId) {
             var deleteDeferred = $q.defer();
 
-            var context = SP.ClientContext.get_current();
-            var web = context.get_web();
-            var list = web.get_lists().getByTitle(libraryName);
-            var item = list.getItemById(itemId);
-            item.deleteObject();
-            context.executeQueryAsync(success, failure);
+            if (listsInfo !== undefined && listsInfo[listName] !== undefined && listsInfo[listName].DisplayName !== undefined) {
+                var listDisplayName = listsInfo[listName].DisplayName;
+
+                var context = SP.ClientContext.get_current();
+                var web = context.get_web();
+                var list = web.get_lists().getByTitle(listDisplayName);
+                var item = list.getItemById(itemId);
+                item.deleteObject();
+                context.executeQueryAsync(success, failure);
+
+                function success() {
+                    deleteDeferred.resolve();
+                }
+
+                function failure(sender, args) {
+                    deleteDeferred.reject(args.get_message());
+                }
+            }
+            else {
+                deleteDeferred.reject("Factory not initialized.");
+            }
 
             return deleteDeferred.promise;
-
-            function success() {
-                deleteDeferred.resolve();
-            }
-
-            function failure(sender, args) {
-                deleteDeferred.reject(sender, args);
-            }
+            
         }
 
         /**/
@@ -888,249 +954,6 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
             }
             return fieldLookups;
         }
-
-        //function setListInfoProperties(listsInfo) {
-        //    var fieldPromises = [];
-        //    for (var listName in listsInfo) {
-        //        if (listsInfo.hasOwnProperty(listName)) {
-        //            var list = listsInfo[listName];
-        //            var listTitle = listName;
-        //            if (list.DisplayName !== undefined) {
-        //                listTitle = list.DisplayName;
-        //            }
-        //            if (list.Columns !== undefined) {
-        //                for (var columnName in list.Columns) {
-        //                    if (list.Columns.hasOwnProperty(columnName)) {
-        //                        var column = list.Columns[columnName];
-        //                        if (column.Type !== undefined && column.InputType !== undefined) {
-        //                            var fieldPromise = getListField(listTitle, columnName);
-        //                            fieldPromise.then(function (field) {
-
-        //                            }, function (reason) {
-
-        //                            });
-        //                            switch (column.Type) {
-        //                                case "text":
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(field);
-        //                                        column.DefaultValue = field.get_defaultValue();
-        //                                        column.IsRequired = field.get_required();
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    break;
-        //                                case "multiText":
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(field);
-        //                                        column.IsRequired = field.get_required();
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    break;
-        //                                case "choice":
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //choices
-        //                                    //default
-        //                                    //displayAs
-        //                                    break;
-        //                                case "multiChoice":
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //choices
-        //                                    //default
-        //                                    break;
-        //                                case "lookup":
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //choices
-        //                                    break;
-        //                                case "multiLookup":
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //choices
-        //                                    break;
-        //                                case "yesNo":
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                        column.DefaultValue = field.get_defaultValue();
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    break;
-        //                                case "person":
-        //                                    fieldPromise = getListField(listName, columnName);
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //peopleOnly/peopleAndGroups
-        //                                    //chooseFrom(group)
-        //                                    //showField
-        //                                    break;
-        //                                case "multiPerson":
-        //                                    fieldPromise = getListField(listName, columnName);
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //peopleOnly/peopleAndGroups
-        //                                    //chooseFrom(group)
-        //                                    //showField
-        //                                    break;
-        //                                case "metadata":
-        //                                    fieldPromise = getListField(listName, columnName);
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //choices
-        //                                    //displayValue
-        //                                    //allowFillIn
-        //                                    //default
-        //                                    var termsPromise = getTermsForField(listName, columnName);
-        //                                    termsPromise.then(function (terms) {
-        //                                        setTermsForField(column, terms);
-        //                                    }, function (reason) {
-
-        //                                    });
-        //                                    fieldPromises.push(termsPromise);
-        //                                    break;
-        //                                case "multiMetadata":
-        //                                    fieldPromise = getListField(listName, columnName);
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //choices
-        //                                    //displayValue
-        //                                    //allowFillIn
-        //                                    //default
-        //                                    var termsPromise = getTermsForField(listName, columnName);
-        //                                    termsPromise.then(function (terms) {
-        //                                        setTermsForField(column, terms);
-        //                                    }, function (reason) {
-
-        //                                    });
-        //                                    fieldPromises.push(termsPromise);
-        //                                    break;
-        //                                case "link":
-        //                                    fieldPromise = getListField(listName, columnName);
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //format (hyperlink/picture)
-        //                                    break;
-        //                                case "number":
-        //                                    fieldPromise = getListField(listName, columnName);
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //default
-        //                                    //minmax
-        //                                    //decimalplaces
-        //                                    //showaspercentage
-        //                                    break;
-        //                                case "currency":
-        //                                    fieldPromise = getListField(listName, columnName);
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //default
-        //                                    //minmax
-        //                                    //decimalplaces
-        //                                    //format
-        //                                    break;
-        //                                case "dateTime":
-        //                                    fieldPromise = getListField(listName, columnName);
-        //                                    fieldPromise.then(function (field) {
-        //                                        console.log(listName + ":" + columnName);
-        //                                        console.log(field);
-        //                                    }, function (reason) {
-
-        //                                    })
-        //                                    fieldPromises.push(fieldPromise);
-        //                                    //req
-        //                                    //default
-        //                                    //format (dateOnly/dateTime) (standard/friendly)
-        //                                    break;
-        //                                default:
-        //                                    //throw error.
-        //                                    break;
-        //                            }
-        //                        }
-        //                        else {
-        //                            //throw error.
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //            else {
-        //                //throw error.
-        //            }
-        //        }
-        //    }
-        //    return $q.all(fieldPromises);
-        //}
 
         function getListGuid(listName) {
             var deferred = $q.defer();
