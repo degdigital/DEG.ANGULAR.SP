@@ -1,5 +1,5 @@
 ﻿
-var app = app || angular.module("angularSP", ['ui.bootstrap']);
+var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.grid.selection']);
 
 (function (ng, $) {
 
@@ -35,6 +35,8 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         });
 
     app.directive("ngspColumn", angularSpField);
+
+    app.directive("ngspList", angularSpList);
     
     function angularSpField ($compile) {
         return {
@@ -832,27 +834,137 @@ var app = app || angular.module("angularSP", ['ui.bootstrap']);
         }
     }
 
-    app.directive("ngspList", angularSpList);
-
     function angularSpList($compile) {
         return {
             restrict: "A",
+            require: "ngModel",
             scope: {
                 ngspList: '=',
+                ngspReadOnly: '='
             },
             link: link
         }
 
-        function link(scope, element, attrs) {
+        function link(scope, element, attrs, ngModel) {
             scope.ngspList = {};
             scope.$watch('ngspList', function () {
                 if (scope.ngspList.DisplayName !== undefined && scope.ngspList.Columns !== undefined) {
                     element.html("");
                     element.append(generateTitleElement(scope.ngspList));
-                    element.append(generateGridElement());
-                    element.append(generateButtonsElement(element, scope));
+                    element.append(generateInputElement(ngModel, scope));
+                    //element.append(generateButtonsElement(ngModel, scope));
                 }
             });
+        }
+
+        function generateTitleElement(list) {
+            var titleElement = $("<label></label>");
+            titleElement.text(list.DisplayName);
+            return titleElement;
+        }
+
+        function generateInputElement(ngModel, scope) {
+            //switch (scope.ngspList.Type) {
+            //    case "Calendar":
+            //        console.log("Calendar list type is currently not supported.");
+            //        return;
+            //        break;
+            //    default:
+                    return generateGridElement(ngModel, scope);
+            //        break;
+            //}
+        }
+
+        function generateGridElement(ngModel, scope) {
+            scope.InputValues = [
+                {
+                    "One": "One",
+                    "Two": "2"
+                }
+            ];
+
+            scope.uiGridOptions = {
+                data: scope.InputValues,
+                enableRowSelection: true,
+                enableRowHeaderSelection: false,
+                multiSelect: false,
+                enableHorizontalScrollbar: 1, 
+                enableVerticalScrollbar: 1,
+                onRegisterApi: registerGridApi,
+            }
+
+            function registerGridApi(gridApi) {
+                scope.gridApi = gridApi;
+                console.log(scope.gridApi);
+                scope.gridApi.selection.on.rowSelectionChanged(scope, function () {
+                    scope.selectedRow = scope.gridApi.selection.getSelectedRows()[0];
+                    //console.log(scope.gridApi.selection.getSelectedRows()[0]);
+                });
+            }
+
+            scope.createRow = function() {
+                scope.InputValues.push({
+                    "One": "Another",
+                    "Two": "Second"
+                });
+            }
+
+            scope.updateRow = function() {
+                if (scope.selectedRow === undefined) {
+                    alert("Nothing selected");
+                }
+                else {
+
+                }
+            }
+
+            scope.deleteRow = function() {
+                if (scope.selectedRow === undefined) {
+                    alert("Nothing selected");
+                }
+                else {
+
+                }
+            }
+
+            scope.rowNotSelected = function() {
+                if (scope.selectedRow === undefined) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+
+            var outerElement = $("<span></span>");
+            var gridElement = $("<div></div>");
+            gridElement.attr("data-ui-grid", "uiGridOptions");
+            gridElement.attr("data-ui-grid-selection", "true");
+            gridElement.attr("class", "grid");
+            outerElement.append(gridElement);
+            
+            var createElement = $("<input></input>");
+            createElement.attr("type", "button");
+            createElement.attr("value", "Add");
+            createElement.attr("data-ng-click", "createRow()");
+            outerElement.append(createElement);
+
+            var updateElement = $("<input></input>");
+            updateElement.attr("type", "button");
+            updateElement.attr("value", "Edit");
+            updateElement.attr("data-ng-disabled", "rowNotSelected()");
+            updateElement.attr("data-ng-click", "updateRow()");
+            outerElement.append(updateElement);
+
+            var deleteElement = $("<input></input>");
+            deleteElement.attr("type", "button");
+            deleteElement.attr("value", "Delete");
+            deleteElement.attr("data-ng-disabled", "rowNotSelected()");
+            deleteElement.attr("data-ng-click", "deleteRow()");
+            outerElement.append(deleteElement);
+
+            $compile(outerElement)(scope);
+            return outerElement;
         }
     }
 
