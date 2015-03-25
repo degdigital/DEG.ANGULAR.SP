@@ -1,5 +1,4 @@
-﻿
-var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.grid.selection']);
+﻿var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.grid.selection']);
 
 (function (ng, $) {
 

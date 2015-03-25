@@ -1,5 +1,4 @@
-﻿
-var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.grid.selection']);
+﻿var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.grid.selection']);
 
 (function (ng, $) {
 
@@ -852,6 +851,7 @@ var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.gri
                     element.html("");
                     element.append(generateTitleElement(scope.ngspList));
                     element.append(generateInputElement(ngModel, scope));
+                    element.append(generateButtonsElement(scope));
                     //element.append(generateButtonsElement(ngModel, scope));
                 }
             });
@@ -870,9 +870,47 @@ var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.gri
             //        return;
             //        break;
             //    default:
-                    return generateGridElement(ngModel, scope);
+            return generateGridElement(ngModel, scope);
+            //return generateTableElement(ngModel, scope);
             //        break;
             //}
+        }
+
+        function generateTableElement(ngModel, scope) {
+            scope.InputValues = [
+                {
+                    "One": "One",
+                    "Two": "2"
+                }
+            ];
+
+            var outerElement = $("<span></span>");
+            var tableElement = $("<table></table>");
+            var headerElement = $("<th></th>");
+            var rowElement = $("<tr></tr>");
+            
+            var columns = scope.ngspList.Columns;
+            for (var columnName in columns) {
+                if (columns.hasOwnProperty(columnname)) {
+                    var column = columns[columnName];
+                    var headerColumnElement = $("<td></td>");
+                    if (column.DisplayName !== undefined) {
+                        headerColumnElement.text("{{ngspList.Columns[" + columnName + "].DisplayName}}");
+                    }
+                    else {
+                        headerColumnElement.text(columnName);
+                    }
+                    headerElement.append(headerColumnElement);
+                    var rowColumnElement = $("<td></td>");
+                    rowColumnElement.text("{{InputValues[" + columnName + "]}}");
+                    rowElement.append(rowColumnElement);
+                }
+            }
+
+            outerElement.append()
+
+            $compile(outerElement)(scope);
+            return outerElement;
         }
 
         function generateGridElement(ngModel, scope) {
@@ -898,18 +936,29 @@ var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.gri
                 console.log(scope.gridApi);
                 scope.gridApi.selection.on.rowSelectionChanged(scope, function () {
                     scope.selectedRow = scope.gridApi.selection.getSelectedRows()[0];
-                    //console.log(scope.gridApi.selection.getSelectedRows()[0]);
                 });
             }
 
-            scope.createRow = function() {
+            var outerElement = $("<span></span>");
+            var gridElement = $("<div></div>");
+            gridElement.attr("data-ui-grid", "uiGridOptions");
+            gridElement.attr("data-ui-grid-selection", "true");
+            gridElement.attr("class", "grid");
+            outerElement.append(gridElement);
+
+            $compile(outerElement)(scope);
+            return outerElement;
+        }
+
+        function generateButtonsElement(scope) {
+            scope.createRow = function () {
                 scope.InputValues.push({
                     "One": "Another",
                     "Two": "Second"
                 });
             }
 
-            scope.updateRow = function() {
+            scope.updateRow = function () {
                 if (scope.selectedRow === undefined) {
                     alert("Nothing selected");
                 }
@@ -918,7 +967,7 @@ var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.gri
                 }
             }
 
-            scope.deleteRow = function() {
+            scope.deleteRow = function () {
                 if (scope.selectedRow === undefined) {
                     alert("Nothing selected");
                 }
@@ -927,7 +976,7 @@ var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.gri
                 }
             }
 
-            scope.rowNotSelected = function() {
+            scope.rowNotSelected = function () {
                 if (scope.selectedRow === undefined) {
                     return true;
                 }
@@ -937,12 +986,7 @@ var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.gri
             }
 
             var outerElement = $("<span></span>");
-            var gridElement = $("<div></div>");
-            gridElement.attr("data-ui-grid", "uiGridOptions");
-            gridElement.attr("data-ui-grid-selection", "true");
-            gridElement.attr("class", "grid");
-            outerElement.append(gridElement);
-            
+
             var createElement = $("<input></input>");
             createElement.attr("type", "button");
             createElement.attr("value", "Add");
