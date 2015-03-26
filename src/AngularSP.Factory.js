@@ -1166,7 +1166,7 @@
             var userInfoArray = programDetails[field];
             if (userInfoArray !== undefined && (visibleElements[field] || visibleElements[field] === undefined)) {
                 if (userInfoArray.length > 0) {
-                    var userInfo = userInfoArray[0]
+                    var userInfo = userInfoArray[0];
                     var user = SP.FieldUserValue.fromUser(userInfo.Key);
                     //console.log(userInfo);
                     return { fieldType: "user", value: user };

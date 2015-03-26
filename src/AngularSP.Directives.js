@@ -49,9 +49,10 @@
         }
 
         function link(scope, element, attrs, ngModel) {
-            scope.ngspColumn = {};
+            //scope.ngspColumn = {};
             scope.$watch('ngspColumn', function () {
-                if (scope.ngspColumn.Title !== undefined) {
+                //console.log(scope);
+                if (scope.ngspColumn !== undefined) {
                     element.html("");
                     element.append(generateTitleElement(scope.ngspColumn));
                     if (scope.ngspReadOnly !== undefined && scope.ngspReadOnly) {
@@ -103,9 +104,9 @@
         }
 
         function generateTextElement(ngModel, scope) {
-            //if (ngModel.$viewValue !== undefined) {
-            //    scope.InputValue = ngModel.$viewValue;
-            //}
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
 
             ngModel.$formatters.push(function (value) {
                 scope.InputValue = value;
@@ -139,9 +140,9 @@
         }
 
         function generateTextBoxElement(ngModel, scope) {
-            //if (ngModel.$viewValue !== undefined) {
-            //    scope.InputValue = ngModel.$viewValue;
-            //}
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
 
             ngModel.$formatters.push(function (value) {
                 scope.InputValue = value;
@@ -166,9 +167,9 @@
         }
 
         function generateNicEditElement(ngModel, scope) {
-            //if (ngModel.$viewValue !== undefined) {
-            //    scope.InputValue = ngModel.$viewValue;
-            //}
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
 
             ngModel.$formatters.push(function (value) {
                 scope.InputValue = value;
@@ -208,6 +209,10 @@
         }
 
         function generateDropDownElement(ngModel, scope) {
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
+
             ngModel.$formatters.push(function (value) {
                 scope.InputValue = value;
             });
@@ -238,12 +243,9 @@
 
         function generateCheckboxElement(ngModel, scope) {
 
-            //if (ngModel.$viewValue !== undefined) {
-            //    scope.InputValue = ngModel.$viewValue;
-            //}
-            //else {
-            //    scope.InputValue = {};
-            //}
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
 
             ngModel.$formatters.push(function (value) {
                 scope.InputValue = value;
@@ -296,6 +298,10 @@
         }
 
         function generateRadioElement(ngModel, scope) {
+
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = ngModel.$viewValue;
+            }
 
             ngModel.$formatters.push(function (value) {
                 scope.InputValue = value;
@@ -400,9 +406,14 @@
         }
 
         function generateDateTimeElement(ngModel, scope) {
-            scope.InputValue = {};
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValue = {};
+                scope.InputValue.Date = ngModel.$viewValue;
+                scope.InputValue.Time = ngModel.$viewValue;
+            }
 
             ngModel.$formatters.push(function (value) {
+                scope.InputValue = {};
                 scope.InputValue.Date = value;
                 scope.InputValue.Time = value;
             });
@@ -833,25 +844,27 @@
         }
     }
 
-    function angularSpList($compile) {
+    function angularSpList($compile, $modal) {
         return {
             restrict: "A",
             require: "ngModel",
             scope: {
                 ngspList: '=',
-                ngspReadOnly: '='
+                ngspReadOnly: '=',
+                //ngspTemplate: '=',
+                ngspTemplateUrl: '@'
             },
             link: link
         }
 
         function link(scope, element, attrs, ngModel) {
-            scope.ngspList = {};
+            //scope.ngspList = {};
             scope.$watch('ngspList', function () {
-                if (scope.ngspList.DisplayName !== undefined && scope.ngspList.Columns !== undefined) {
+                if (scope.ngspList !== undefined) {
                     element.html("");
                     element.append(generateTitleElement(scope.ngspList));
                     element.append(generateInputElement(ngModel, scope));
-                    element.append(generateButtonsElement(scope));
+                    element.append(generateButtonsElement(ngModel, scope));
                     //element.append(generateButtonsElement(ngModel, scope));
                 }
             });
@@ -914,15 +927,47 @@
         }
 
         function generateGridElement(ngModel, scope) {
-            scope.InputValues = [
-                {
-                    "One": "One",
-                    "Two": "2"
+            if (ngModel.$viewValue !== undefined) {
+                scope.InputValues = ngModel.$viewValue;
+            }
+            else {
+                scope.InputValues = [];
+            }
+
+            ngModel.$formatters.push(function (value) {
+                console.log(value);
+                if (value !== undefined) {
+                    scope.InputValues = value;
                 }
-            ];
+                else {
+                    scope.InputValues = [];
+                }
+            });
+
+            var gridColumnDefs = [];
+
+            var columns = scope.ngspList.Columns
+
+            for (var columnName in columns) {
+                if (columns.hasOwnProperty(columnName)) {
+                    var column = columns[columnName];
+                    if (column.Show) {
+                        var def = {
+                            field: columnName
+                        };
+                        if (column.DisplayName !== undefined) {
+                            def.displayName = column.DisplayName;
+                        }
+                        gridColumnDefs.push(def);
+                    }
+                }
+            }
+
+            //console.log(gridColumnDefs);
 
             scope.uiGridOptions = {
                 data: scope.InputValues,
+                columnDefs: gridColumnDefs,
                 enableRowSelection: true,
                 enableRowHeaderSelection: false,
                 multiSelect: false,
@@ -933,7 +978,7 @@
 
             function registerGridApi(gridApi) {
                 scope.gridApi = gridApi;
-                console.log(scope.gridApi);
+                //console.log(scope.gridApi);
                 scope.gridApi.selection.on.rowSelectionChanged(scope, function () {
                     scope.selectedRow = scope.gridApi.selection.getSelectedRows()[0];
                 });
@@ -950,29 +995,68 @@
             return outerElement;
         }
 
-        function generateButtonsElement(scope) {
+        function generateButtonsElement(ngModel, scope) {
             scope.createRow = function () {
-                scope.InputValues.push({
-                    "One": "Another",
-                    "Two": "Second"
+                var defaultItem = { };
+                var modalInstance = $modal.open({
+                    templateUrl: scope.ngspTemplateUrl,
+                    controller: 'listItemModalController',
+                    resolve: {
+                        item: function () {
+                            return defaultItem;
+                        },
+                        columns: function () {
+                            return scope.ngspList.Columns;
+                        }
+                    }
+                });
+
+                modalInstance.result.then(function (item) {
+                    scope.InputValues.push(item);
+                    ngModel.$setViewValue(scope.InputValues);
+                }, function (reason) {
+                    console.log(reason);
                 });
             }
 
             scope.updateRow = function () {
                 if (scope.selectedRow === undefined) {
-                    alert("Nothing selected");
+                    alert("Nothing selected.");
                 }
                 else {
+                    var modalInstance = $modal.open({
+                        templateUrl: scope.ngspTemplateUrl,
+                        controller: 'listItemModalController',
+                        resolve: {
+                            item: function () {
+                                return ng.copy(scope.selectedRow);
+                            },
+                            columns: function () {
+                                return scope.ngspList.Columns;
+                            }
+                        }
+                    });
 
+                    modalInstance.result.then(function (item) {
+                        var selectedIndex = scope.InputValues.indexOf(scope.selectedRow);
+                        scope.InputValues[selectedIndex] = item;
+                        ngModel.$setViewValue(scope.InputValues);
+                        scope.selectedRow = undefined;
+                    }, function (reason) {
+                        console.log(reason);
+                    });
                 }
             }
 
             scope.deleteRow = function () {
                 if (scope.selectedRow === undefined) {
-                    alert("Nothing selected");
+                    alert("Nothing selected.");
                 }
                 else {
-
+                    var selectedIndex = scope.InputValues.indexOf(scope.selectedRow);
+                    scope.InputValues.splice(selectedIndex, 1);
+                    ngModel.$setViewValue(scope.InputValues);
+                    scope.selectedRow = undefined;
                 }
             }
 
