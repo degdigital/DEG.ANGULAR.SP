@@ -1,1 +1,1 @@
-uglifyjs src\AngularSP.Directives.js src\AngularSP.Factory.js -c -m -o dist\angularsp.min.js
+uglifyjs src\AngularSP.Directives.js src\AngularSP.Factory.js src\AngularSP.Controllers.js -c -m -o dist\angularsp.min.js

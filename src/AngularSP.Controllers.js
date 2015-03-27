@@ -1,7 +1,7 @@
 ﻿var app = app || angular.module("angularSP", ['ui.bootstrap', 'ui.grid', 'ui.grid.selection']);
 
 (function (ng, $) {
-    app.controller('listItemModalController', listItemModalCtrl);
+    app.controller('listItemModalController', ["$scope", "$modalInstance", "item", "columns", listItemModalCtrl]);
 
     function listItemModalCtrl($scope, $modalInstance, item, columns) {
         $scope.item = item;

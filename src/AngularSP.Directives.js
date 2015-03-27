@@ -33,9 +33,9 @@
             };
         });
 
-    app.directive("ngspColumn", angularSpField);
+    app.directive("ngspColumn", ["$compile", angularSpField]);
 
-    app.directive("ngspList", angularSpList);
+    app.directive("ngspList", ["$compile", "$modal", angularSpList]);
     
     function angularSpField ($compile) {
         return {
