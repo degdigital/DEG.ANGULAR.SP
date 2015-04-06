@@ -268,6 +268,8 @@
                             }
                         }
                     }
+                    console.log(spItemValues);
+                    inputValues.Id = spItemValues.ID;
                     if (peopleLookups.length > 0) {
                         context.executeQueryAsync(function () {
                             peopleLookups.forEach(function (peopleLookup) {
@@ -288,11 +290,88 @@
         }
 
         function getListItems(listName, params) {
+            var listItemsDeferred = $q.defer();
 
+            var listInfo;
+            var itemsParams;
+
+            if (listsInfo !== undefined) {
+                if (listsInfo[listName] !== undefined) {
+                    listInfo = listsInfo[listName];
+                    itemsParams = params;
+                    SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                        SP.SOD.executeFunc('sp.taxonomy.js', 'SP.Taxonomy.TaxonomySession', function () {
+                            SP.SOD.executeFunc('SP.UserProfiles.js', 'SP.UserProfiles.PeopleManager', sharePointReady);
+                        });
+                    });
+                }
+            }
+            else {
+
+            }
+
+            return listItemsDeferred.promise;
+
+            function sharePointReady() {
+                var listName = listInfo.DisplayName;
+
+                var context = SP.ClientContext.get_current();
+                var web = context.get_web();
+                var spList = web.get_lists().getByTitle(listName);
+                var camlQuery = getCamlQuery(itemsParams);
+                var spItems = spList.getItems(camlQuery);
+                context.load(spItems);
+                context.executeQueryAsync(function () {
+                    var spItemsEnum = spItems.getEnumerator();
+                    var peopleLookups = [];
+                    var items = [];
+                    while (spItemsEnum.moveNext()) {
+                        var spItem = spItemsEnum.get_current();
+                        var columns = listInfo.Columns;
+                        var spItemValues = spItem.get_fieldValues();
+                        var inputValues = {};
+                        for (var columnName in columns) {
+                            if (columns.hasOwnProperty(columnName)) {
+                                var columnInfo = columns[columnName];
+                                if (spItemValues[columnName] !== undefined) {
+                                    var spItemValue = spItemValues[columnName];
+                                    if (spItemValue !== null) {
+                                        var inputValue = getInputValue(columnInfo, spItemValue, peopleLookups);
+                                        inputValues[columnName] = inputValue;
+                                    }
+                                    //console.log(columnName);
+                                    //console.log(inputValues[columnName]);
+                                }
+                            }
+                        }
+                        inputValues.Id = spItemValues.ID;
+                        items.push(inputValues);
+                    }
+                    if (peopleLookups.length > 0) {
+                        context.executeQueryAsync(function () {
+                            peopleLookups.forEach(function (peopleLookup) {
+                                peopleLookup.Callback(peopleLookup.Values, peopleLookup.RawResults);
+                            });
+                            listItemsDeferred.resolve(items);
+                        }, function (sender, args) {
+                            listItemsDeferred.reject(args.get_message());
+                        });
+                    }
+                    else {
+                        listItemsDeferred.resolve(items);
+                    }
+                }, function (sender, args) {
+                    listItemsDeferred.reject(args.get_message());
+                });
+            }
         }
 
         function updateListItem(listName, itemProps, overrideConflict) {
             
+        }
+
+        function commitListItems(listName, params, itemsProps, overrideConflict) {
+
         }
 
         function deleteListItem(listName, itemId) {
@@ -325,6 +404,65 @@
         }
 
         /**/
+
+        function getCamlQuery(params) {
+            var camlQuery = new SP.CamlQuery();
+            var viewXml = $("<View></View>");
+            var queryXml = $("<Query></Query>");
+            var whereXml = $("<Where></Where>");
+            if (params.LookupColumn !== undefined && params.LookupValue !== undefined) {
+                var eqXml = $("<Eq></Eq>");
+                var fieldRefXml = $("<FieldRef />");
+                fieldRefXml.attr("Name", params.LookupColumn);
+                whereXml.append(fieldRefXml);
+                var valueXml = $("<Value></Value>");
+                valueXml.attr("Type", "Lookup");
+                valueXml.text(params.LookupValue);
+                whereXml.append(valueXml);
+            }
+            queryXml.append(whereXml);
+            viewXml.append(queryXml);
+            var camlQueryString = viewXml[0].outerHTML;
+            //console.log(camlQueryString);
+            camlQuery.set_viewXml(camlQueryString);
+            return camlQuery;
+        }
+
+        //function getCamlValueType(columnInfo) {
+        //    switch (columnInfo.Type) {
+        //        case "text":
+
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //        case "":
+        //            break;
+        //    }
+        //}
 
         function getListItemValue(columnInfo, inputValue) {
             var itemValue = null;

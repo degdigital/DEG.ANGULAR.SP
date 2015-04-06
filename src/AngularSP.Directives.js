@@ -937,10 +937,7 @@
             ngModel.$formatters.push(function (value) {
                 console.log(value);
                 if (value !== undefined) {
-                    scope.InputValues = value;
-                }
-                else {
-                    scope.InputValues = [];
+                    scope.uiGridOptions.data = value;
                 }
             });
 
