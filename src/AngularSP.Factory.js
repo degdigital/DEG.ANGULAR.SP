@@ -98,7 +98,7 @@
 
         function createListItem(listName, itemProps) {
             var createDeferred = $q.defer();
-            console.log(listName);
+            //console.log(listName);
             var listInfo;
             if (listsInfo !== undefined) {
                 if (listsInfo[listName] !== undefined) {
@@ -367,7 +367,65 @@
         }
 
         function updateListItem(listName, itemProps, overrideConflict) {
-            
+            var updateDeferred = $q.defer();
+
+            var listInfo;
+            if (listsInfo !== undefined) {
+                if (listsInfo[listName] !== undefined) {
+                    listInfo = listsInfo[listName];
+                    SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                        SP.SOD.executeFunc('sp.taxonomy.js', 'SP.Taxonomy.TaxonomySession', function () {
+                            SP.SOD.executeFunc('SP.UserProfiles.js', 'SP.UserProfiles.PeopleManager', sharePointReady);
+                        });
+                    });
+                }
+            }
+            else {
+
+            }
+
+            return updateDeferrred.promise;
+
+            function sharePointReady() {
+                var listName = listInfo.DisplayName;
+
+                var context = SP.ClientContext.get_current();
+                var web = context.get_web();
+                var spList = web.get_lists().getByTitle(listName);
+                var itemCreationInfo = new SP.ListItemCreationInformation();
+                var listItem = spList.getItemById(itemProps.Id);
+                
+                if (overrideConflict) {
+                    context.load(listItem);
+                    context.executeQueryAsync(updateItemValues, function (sender, args) {
+                        updateDeferred.reject(args.get_message());
+                    });
+                }
+                else {
+                    updateItemValues();
+                }
+
+                function updateItemValues() {
+                    var columns = listInfo.Columns;
+                    for (var columnName in columns) {
+                        if (columns.hasOwnProperty(columnName)) {
+                            var columnInfo = columns[columnName];
+                            if (itemProps[columnName] !== undefined) {
+                                var inputValue = itemProps[columnName];
+                                var itemValue = getListItemValue(columnInfo, inputValue);
+                                listItem.set_item(columnName, itemValue);
+                            }
+                        }
+                    }
+                    listItem.update();
+                    context.load(listItem);
+                    context.executeQueryAsync(function () {
+                        updateDeferred.resolve(listItem.get_id());
+                    }, function (sender, args) {
+                        updateDeferred.reject(args.get_message());
+                    });
+                }
+            }
         }
 
         function commitListItems(listName, params, itemsProps, overrideConflict) {
