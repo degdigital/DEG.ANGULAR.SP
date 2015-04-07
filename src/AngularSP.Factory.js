@@ -429,7 +429,88 @@
         }
 
         function commitListItems(listName, params, itemsProps, overrideConflict) {
+            commitDeferred = $q.defer();
 
+            var listInfo;
+            if (listsInfo !== undefined) {
+                if (listsInfo[listName] !== undefined) {
+                    listInfo = listsInfo[listName];
+                    var listItemsPromise = getListItems(listName, params);
+                    listItemsPromise.then(listItemsSucceeded, listItemsFailed);
+                }
+            }
+            else {
+
+            }
+
+            return commitDeferred.promise;
+
+            function listItemsSucceeded(listItems) {
+                var listTitle = listInfo.DisplayName;
+                var context = SP.ClientContext.get_current();
+                var web = context.get_web();
+                var spList = web.get_lists().getByTitle(listTitle);
+                var itemCreationInfo = new SP.ListItemCreationInformation();
+
+                var addedIndexes = [];
+
+                var columns = listInfo.Columns;
+
+                for (var i = itemsProps.length - 1; i >= 0; i--) {
+                    var itemProps = itemsProps[i];
+                    if (itemProps.Id === undefined) {
+                        var listItem = spList.addItem(itemCreationInfo);
+                        setListItem(columns, listItem);
+                        listItem.update();
+                        context.load(listItem);
+                        itemsProps.splice(i, 1);
+                    }
+                }
+
+                listItems.forEach(function (listItem) {
+                    var found = false;
+                    for (var i = 0; i < itemsProps.length; i++) {
+                        var itemProps = itemsProps[i];
+                        if (listItem.Id === itemProps.Id) {
+                            setListItem(columnd, listItem);
+                            listItem.update();
+                            context.load(listItem);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        listItem.deleteObject();
+                    }
+                });
+
+                context.executeQueryAsync(commitSuccess, commitFailure);
+
+                function setListItem(columns, listItem) {
+                    for (var columnName in columns) {
+                        if (columns.hasOwnProperty(columnName)) {
+                            var columnInfo = columns[columnName];
+                            if (itemProps[columnName] !== undefined) {
+                                var inputValue = itemProps[columnName];
+                                var itemValue = getListItemValue(columnInfo, inputValue);
+                                listItem.set_item(columnName, itemValue);
+                            }
+                        }
+                    }
+                }
+
+                function commitSuccess() {
+                    commitDeferred.resolve();
+                }
+
+                function commitFailure(sender, args) {
+                    commitDeferred.reject(args.get_message());
+                }
+            }
+
+            function listItemsFailed(reason) {
+                commitDeferred.reject(reason);
+            }
         }
 
         function deleteListItem(listName, itemId) {
