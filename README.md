@@ -1,1 +1,2 @@
-uglifyjs src\AngularSP.Directives.js src\AngularSP.Factory.js src\AngularSP.Controllers.js -c -m -o dist\angularsp.min.js
+#AngularSP
+AngularSP is an Angular module containing a factory and associated directives for interacting with SharePoint. 
