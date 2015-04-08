@@ -149,7 +149,7 @@ On the view, there are two attribute directives that can be used to specify wher
 #### Example
 ```
 <div data-ngsp-column="listsInfo.MainList.Columns.Title" data-ng-model="MainList.Title"></div>
-<script type="text/ng-template" id="AngularSPGridListTemplate">
+<script type="text/ng-template" id="LookupListTemplate">
     <div class="modal-body">
         <div data-ngsp-column="columns.Title" data-ng-model="item.Title"></div>
     </div>
