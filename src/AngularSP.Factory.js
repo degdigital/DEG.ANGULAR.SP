@@ -14,6 +14,7 @@
             getListItems: getListItems,
             updateListItem: updateListItem,
             deleteListItem: deleteListItem,
+            commitListItems: commitListItems,
             getServerRelativeUrl: getServerRelativeUrl
         }
 
@@ -428,7 +429,7 @@
             }
         }
 
-        function commitListItems(listName, params, itemsProps, overrideConflict) {
+        function commitListItems(listName, params, itemsProps) {
             commitDeferred = $q.defer();
 
             var listInfo;

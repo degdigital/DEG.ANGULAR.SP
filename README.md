@@ -36,7 +36,7 @@ The module relies on a list definition JSON object to be created for the "spList
 			},
 			"ChoiceColumn": {
 				"Type": "choice",
-				"InputType": "radio:"
+				"InputType": "radio"
 			}
 		}
 	}
@@ -67,3 +67,75 @@ angular.module("app").controller("ctrl", ["$scope", "spListFactory", function ($
 ```
 
 ### Initializing Factory
+The "spListFactory" needs to be initialized with the list definitions before doing anything else.  The initialization returns a promise that resolves the lists information that is used by the directives.  Generally, you will want to put this on the scope for the directive to pick up.
+
+#### Example
+```
+var initPromise = spListFactory.initFactory(listDefs);
+
+initPromise.then(function (listInfo) {
+	$scope.listsInfo = listsInfo;
+}, function (reason) {
+	$log.error(reason);
+});
+```
+
+### Factory Calls
+Once the factory is initialized, you can use the following methods to interact with your SharePoint lists:
+* createListItem(listName, itemProperties)
+  * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
+  * itemProperties is an object keyed off from column internal names that *must* match up to those in the list definition JSON.
+  * returns a promise that resolves the numerical Id of the newly created item.
+* createListItems(listName, itemsProperties)
+  * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
+  * itemsProperties is an array of objects, each keyed off from column internal names that *must* match up to those in the list definition JSON.
+  * return a promise that resolves an array of numerical Ids for the newly created items.
+* function getListItem(listName, itemId)
+  * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
+  * itemId is the numerical id of the list item that you are requesting.
+  * returns a promise that resolves an object keyed with the column names which map to their values.
+* function getListItems(listName, parameters)
+  * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
+  * parameters is an object that *currently* only supports a LookupColumn, which is the internal column name for a lookup type column in the list, and LookupValue, which is simply the value the query needs to match for the list items.
+  * returns a promise that resolves an array of objects, each keyed with the column names which map to their values.
+* function updateListItem(listName, itemProperties, overrideConflict)
+  * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
+  * itemProperties is an object keyed off from column internal names that *must* match up to those in the list definition JSON.
+  * overrideConflict is a boolean value that specifies if you want the update to override an update conflict (usually caused by another user or workflow saving the form while this one is open).
+  * returns a promise that resolves when the item is successfully updated.
+* function deleteListItem(listName, itemId)
+  * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
+  * itemId is the numerical id of the list item that you are deleting.
+  * returns a promise that resolves when the item is successfully deleted.
+* function commitListItems(listName, parameters, itemsProperties)
+  * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
+  * parameters is an object that *currently* only supports a LookupColumn, which is the internal column name for a lookup type column in the list, and LookupValue, which is simply the value the query needs to match for the list items.
+  * itemsProperties is an array of objects, each keyed off from column internal names that *must* match up to those in the list definition JSON.
+  * returns a promise that resolves when all item changes have been commited.
+* getServerRelativeUrl()
+  * returns the server relative url of the current site.
+  
+### Directives
+On the view, there are two attribute directives that can be used to specify where you would like the input to appear.
+* ngsp-column
+  * specifies the column info obtained during the initialization.
+  * additionally requires an ng-model to be defined.
+* ngsp-list
+  * specifies the column info obtained during the initialization.
+  * additionally requires an ng-model to be defined.
+  * additionally requires an ngsp-template-url to be defined for the create/update modal.
+  
+#### Example
+,,,
+<div data-ngsp-column="listsInfo.MainList.Columns.Title" data-ng-model="MainList.Title"></div>
+<script type="text/ng-template" id="AngularSPGridListTemplate">
+    <div class="modal-body">
+        <div data-ngsp-column="columns.Title" data-ng-model="item.Title"></div>
+    </div>
+    <div class="modal-footer">
+        <input type="button" ng-click="submit(item)" value="Submit" />
+        <input type="button" ng-click="cancel()" value="Cancel" />
+    </div>
+</script>
+<div data-ngsp-list="listsInfo.LookupList" data-ng-model="LookupList" data-ngsp-template-url="LookupListTemplate"></div>
+,,,
