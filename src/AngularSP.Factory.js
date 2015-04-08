@@ -84,14 +84,14 @@
                     }
 
                     function lookupsFailure(sender, args) {
-                        console.log(args.get_message());
+                        //console.log(args.get_message());
                         initDeferred.reject(args.get_message());
                     }
 
                 }
 
                 function failure(sender, args) {
-                    console.log(args.get_message());
+                    //console.log(args.get_message());
                     initDeferred.reject(args.get_message());
                 }
             }
@@ -155,7 +155,7 @@
 
         function createListItems(listName, itemsProps) {
             var createDeferred = $q.defer();
-            console.log(listName);
+            //console.log(listName);
             var listInfo;
             if (listsInfo !== undefined) {
                 if (listsInfo[listName] !== undefined) {
@@ -269,7 +269,7 @@
                             }
                         }
                     }
-                    console.log(spItemValues);
+                    //console.log(spItemValues);
                     inputValues.Id = spItemValues.ID;
                     if (peopleLookups.length > 0) {
                         context.executeQueryAsync(function () {
@@ -851,7 +851,8 @@
                 }
                 else {
                     //Very strange error.
-                    console.log("Field data mismatch.");
+                    //console.log("Field data mismatch.");
+                    $log.error("Field data mismatch.");
                 }
             }
         }
@@ -874,7 +875,7 @@
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     break;
                 case "multiText":
@@ -891,7 +892,7 @@
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     break;
                 case "choice":
@@ -905,7 +906,7 @@
                         column.EditFormat = choiceField.get_editFormat();
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     break;
                 case "multiChoice":
@@ -918,7 +919,7 @@
                         column.FillInChoice = multiChoiceField.get_fillInChoice();
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     break;
                 case "lookup":
@@ -937,11 +938,11 @@
                             lookupCount++;
                         }
                         else {
-                            console.log(field.get_title() + ": column type mismatch.");
+                            $log.error(field.get_title() + ": column type mismatch.");
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     break;
                 case "multiLookup":
@@ -960,11 +961,11 @@
                             lookupCount++;
                         }
                         else {
-                            console.log(field.get_title() + ": column type mismatch.");
+                            $log.error(field.get_title() + ": column type mismatch.");
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     break;
                 case "yesNo":
@@ -974,7 +975,7 @@
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     break;
                 case "person":
@@ -990,11 +991,11 @@
                             lookupCount++;
                         }
                         else {
-                            console.log(field.get_title() + ": column type mismatch.");
+                            $log.error(field.get_title() + ": column type mismatch.");
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     //peopleOnly/peopleAndGroups
                     //chooseFrom(group)
@@ -1013,11 +1014,11 @@
                             lookupCount++;
                         }
                         else {
-                            console.log(field.get_title() + ": column type mismatch.");
+                            $log.error(field.get_title() + ": column type mismatch.");
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     //peopleOnly/peopleAndGroups
                     //chooseFrom(group)
@@ -1035,11 +1036,11 @@
                             lookupCount++;
                         }
                         else {
-                            console.log(field.get_title() + ": column type mismatch.");
+                            $log.error(field.get_title() + ": column type mismatch.");
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     //displayValue
                     //allowFillIn
@@ -1057,11 +1058,11 @@
                             lookupCount++;
                         }
                         else {
-                            console.log(field.get_title() + ": column type mismatch.");
+                            $log.error(field.get_title() + ": column type mismatch.");
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     //displayValue
                     //allowFillIn
@@ -1074,7 +1075,7 @@
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     //format (hyperlink/picture)
                     break;
@@ -1085,7 +1086,7 @@
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     //minmax
                     //decimalplaces
@@ -1098,7 +1099,7 @@
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     //minmax
                     //decimalplaces
@@ -1111,7 +1112,7 @@
                         }
                     }
                     else {
-                        console.log(field.get_title() + ": column type mismatch.");
+                        $log.error(field.get_title() + ": column type mismatch.");
                     }
                     //format (dateOnly/dateTime) (standard/friendly)
                     break;
@@ -1262,8 +1263,9 @@
             var field = fields.getByInternalNameOrTitle(fieldName);
             context.load(field);
             context.executeQueryAsync(onFieldSucceeded, function (sender, args) {
-                console.log(fieldName);
-                console.log(args.get_message());
+                //console.log(fieldName);
+                //console.log(args.get_message());
+                fieldDeferred.reject(args.get_message());
             });
             
             return fieldDeferred.promise;
