@@ -11,19 +11,40 @@ The module relies on a list definition JSON object to be created for the "spList
     * The "Columns" object should contain one or more column objects keyed with the column's internal name.
     * Each column object *must* have a "Type" and can have an "InputType" to override the column type default.  Available types and their available input types are:
       * "text"
+	    * "text"
       * "choice"
+	    * "dropDown"
+		* "radio"
       * "multiText"
+	    * "textBox"
+		* "nicEdit"
       * "link"
+	    * "text"
       * "number"
+	    * "text"
       * "currency"
+	    * "text"
       * "multiChoice"
+	    * "checkbox"
       * "lookup"
+	    * "dropDown"
+		* "radio"
       * "multiLookup"
+	    * "checkbox"
       * "yesNo"
+	    * "radio"
+	    * "checkbox"
       * "person"
+	    * "peoplePicker"
       * "multiPerson"
-      * "metadata"
+        * "peoplePicker"
+	  * "metadata"
+	    * "dropDown"
+		* "radio"
       * "multiMetadata"
+	    * "checkbox"
+      * "dateTime"
+	    * "dateTime"
 
 #### Example
 ```
@@ -90,24 +111,24 @@ Once the factory is initialized, you can use the following methods to interact w
   * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
   * itemsProperties is an array of objects, each keyed off from column internal names that *must* match up to those in the list definition JSON.
   * return a promise that resolves an array of numerical Ids for the newly created items.
-* function getListItem(listName, itemId)
+* getListItem(listName, itemId)
   * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
   * itemId is the numerical id of the list item that you are requesting.
   * returns a promise that resolves an object keyed with the column names which map to their values.
-* function getListItems(listName, parameters)
+* getListItems(listName, parameters)
   * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
   * parameters is an object that *currently* only supports a LookupColumn, which is the internal column name for a lookup type column in the list, and LookupValue, which is simply the value the query needs to match for the list items.
   * returns a promise that resolves an array of objects, each keyed with the column names which map to their values.
-* function updateListItem(listName, itemProperties, overrideConflict)
+* updateListItem(listName, itemProperties, overrideConflict)
   * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
   * itemProperties is an object keyed off from column internal names that *must* match up to those in the list definition JSON.
   * overrideConflict is a boolean value that specifies if you want the update to override an update conflict (usually caused by another user or workflow saving the form while this one is open).
   * returns a promise that resolves when the item is successfully updated.
-* function deleteListItem(listName, itemId)
+* deleteListItem(listName, itemId)
   * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
   * itemId is the numerical id of the list item that you are deleting.
   * returns a promise that resolves when the item is successfully deleted.
-* function commitListItems(listName, parameters, itemsProperties)
+* commitListItems(listName, parameters, itemsProperties)
   * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
   * parameters is an object that *currently* only supports a LookupColumn, which is the internal column name for a lookup type column in the list, and LookupValue, which is simply the value the query needs to match for the list items.
   * itemsProperties is an array of objects, each keyed off from column internal names that *must* match up to those in the list definition JSON.
@@ -126,7 +147,7 @@ On the view, there are two attribute directives that can be used to specify wher
   * additionally requires an ngsp-template-url to be defined for the create/update modal.
   
 #### Example
-,,,
+```
 <div data-ngsp-column="listsInfo.MainList.Columns.Title" data-ng-model="MainList.Title"></div>
 <script type="text/ng-template" id="AngularSPGridListTemplate">
     <div class="modal-body">
@@ -138,4 +159,4 @@ On the view, there are two attribute directives that can be used to specify wher
     </div>
 </script>
 <div data-ngsp-list="listsInfo.LookupList" data-ng-model="LookupList" data-ngsp-template-url="LookupListTemplate"></div>
-,,,
+```
