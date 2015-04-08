@@ -33,7 +33,7 @@
             return serverRelativeUrl;
         }
 
-        function initFactory(columnDefs, cTypeDefs, listDefs) {
+        function initFactory(listDefs, cTypeDefs, columnDefs) {
 
             columnDefinitions = columnDefs;
             columnDefinitions = cTypeDefs;
