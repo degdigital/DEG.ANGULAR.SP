@@ -385,7 +385,7 @@
 
             }
 
-            return updateDeferrred.promise;
+            return updateDeferred.promise;
 
             function sharePointReady() {
                 var listName = listInfo.DisplayName;
