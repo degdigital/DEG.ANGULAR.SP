@@ -34,17 +34,7 @@
             return serverRelativeUrl;
         }
 
-        function initFactory(listDefs, cTypeDefs, columnDefs) {
-
-            columnDefinitions = columnDefs;
-            columnDefinitions = cTypeDefs;
-            listDefinitions = listDefs;
-
-            columnsInfo = ng.copy(columnDefs);
-            cTypesInfo = ng.copy(cTypeDefs);
-            listsInfo = ng.copy(listDefs);
-
-            cascadeColumnProperties(columnsInfo, cTypesInfo, listsInfo);
+        function initFactory(lists) {
 
             var initDeferred = $q.defer();
 
@@ -785,43 +775,6 @@
                     Resolved: true
                 }
                 values.push(person);
-            }
-        }
-
-        function cascadeColumnProperties(columnsInfo, cTypesInfo, listsInfo) {
-            cascadeListsInfoProperties(columnsInfo, listsInfo);
-        }
-
-        function cascadeListsInfoProperties(columnsInfo, listsInfo) {
-            for (var listName in listsInfo) {
-                if (listsInfo.hasOwnProperty(listName)) {
-                    var listColumns = listsInfo[listName].Columns;
-                    if (listColumns !== undefined) {
-                        cascadeListInfoColumnProperties(columnsInfo, listColumns);
-                    }
-                }
-            }
-        }
-
-        function cascadeListInfoColumnProperties(columnsInfo, listColumns) {
-            for (var columnName in listColumns) {
-                if (listColumns.hasOwnProperty(columnName)) {
-                    var column = listColumns[columnName];
-                    var columnInfo = columnsInfo[columnName];
-                    if (columnInfo !== undefined) {
-                        cascadeProperties(columnInfo, column);
-                    }
-                }
-            }
-        }
-
-        function cascadeProperties(columnFrom, columnTo) {
-            for (var propertyName in columnFrom) {
-                if (columnFrom.hasOwnProperty(propertyName)) {
-                    if (columnTo[propertyName] === undefined) {
-                        columnTo[propertyName] = columnFrom[propertyName];
-                    }
-                }
             }
         }
 
