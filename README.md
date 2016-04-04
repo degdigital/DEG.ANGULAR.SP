@@ -1,7 +1,7 @@
 # AngularSP
 **Version 1.1**
 
-AngularSP is an Angular module containing a factory and associated directives for interacting with SharePoint.
+AngularSP is an Angular module containing a provider and associated directives for interacting with SharePoint.
 
 ## Usage
 
@@ -43,7 +43,7 @@ angular.module("app").controller("ctrl", ["$scope", "spFormProvider", function (
 ```
 
 ### Initializing Provider
-The "spFormProvider" gets initialized injected into the controller.  The injected object contains a promise called "listInformationPromise" that returns the list information once it is retrieved and initialization is complete.  Generally, you will want wait for the "listInformationPromise" promise to return before executing any controller code.
+The "spFormProvider" gets initialized when injected into the controller.  The injected object contains a promise called "listInformationPromise" that returns the list information once it is retrieved and initialization is complete.  Generally, you will want wait for the "listInformationPromise" promise to return before executing any controller code.
 
 #### Example
 ```
@@ -57,7 +57,7 @@ app.controller('testFormController', ['$scope', '$log', 'spFormProvider', functi
 }]);
 ```
 
-### Factory Calls
+### Provider Calls
 Once the provider is initialized, you can use the following methods to interact with your SharePoint lists:
 * createListItem(listName, itemProperties)
   * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
@@ -104,8 +104,8 @@ On the view, there are two attribute directives that can be used to specify wher
   
 #### Example
 ```
-<div data-ngsp-column="listsInfo.MainList.Columns.Title" data-ng-model="MainList.Title"></div>
-<script type="text/ng-template" id="LookupListTemplate">
+<div data-ngsp-column="listsInfo.AngularSPTestList.Columns.Title" data-ng-model="AngularSPTestList.Title"></div>
+<script type="text/ng-template" id="AngularSPGridListTemplate">
     <div class="modal-body">
         <div data-ngsp-column="columns.Title" data-ng-model="item.Title"></div>
     </div>
@@ -114,5 +114,5 @@ On the view, there are two attribute directives that can be used to specify wher
         <input type="button" ng-click="cancel()" value="Cancel" />
     </div>
 </script>
-<div data-ngsp-list="listsInfo.LookupList" data-ng-model="LookupList" data-ngsp-template-url="LookupListTemplate"></div>
+<div data-ngsp-list="listsInfo.AngularSPGridList" data-ng-model="AngularSPGridList" data-ngsp-template-url="AngularSPGridListTemplate"></div>
 ```
