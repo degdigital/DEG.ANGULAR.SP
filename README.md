@@ -1,74 +1,29 @@
 # AngularSP
+**Version 1.1**
+
 AngularSP is an Angular module containing a factory and associated directives for interacting with SharePoint.
 
 ## Usage
 
-### Building your List Definition
-The module relies on a list definition JSON object to be created for the "spListFactory" to obtain the list information for use by the factory and directives.  This JSON object should follow these rules:
-* Each list should have an object in the root object keyed with the list's internal name.
+### Setting Configuration with the List Definition
+The module relies on a list definition JSON object to be set in the config stage using the "defineLists" function.  This JSON object should follow these rules:
+* Each list must have an object in the root object keyed with the list's internal name.
   * Each list object should have a "DisplayName" if the list's display name is different from it's internal name.
-  * Each list object *must* have a "Columns" object that contains the columns that will be present on the form.
-    * The "Columns" object should contain one or more column objects keyed with the column's internal name.
-    * Each column object *must* have a "Type" and can have an "InputType" to override the column type default.  Available types and their available input types are:
-      * "text"
-	    * "text"
-      * "choice"
-	    * "dropDown"
-		* "radio"
-      * "multiText"
-	    * "textBox"
-		* "nicEdit"
-      * "link"
-	    * "text"
-      * "number"
-	    * "text"
-      * "currency"
-	    * "text"
-      * "multiChoice"
-	    * "checkbox"
-      * "lookup"
-	    * "dropDown"
-		* "radio"
-      * "multiLookup"
-	    * "checkbox"
-      * "yesNo"
-	    * "radio"
-	    * "checkbox"
-      * "person"
-	    * "peoplePicker"
-      * "multiPerson"
-        * "peoplePicker"
-	  * "metadata"
-	    * "dropDown"
-		* "radio"
-      * "multiMetadata"
-	    * "checkbox"
-      * "dateTime"
-	    * "dateTime"
+  * Each list object should have a "ContextUrl" if the list's context is different then the current context where the app is executing.
 
 #### Example
 ```
-{
-	"MainList": {
-		"DisplayName": "Main List",
-		"Columns": {
-			"Title": {
-				"Type": "text"
-			},
-			"ChoiceColumn": {
-				"Type": "choice",
-				"InputType": "radio"
-			}
-		}
-	}
-	"LookupList": {
-		Columns:{
-			"Title": {
-				"Type": "text"
-			}
-		}
-	}
-}
+app.config(['spFormProviderProvider', function (spFormProvider) {
+    var listDefinitions = {
+        'AngularSPTestList': {
+            'DisplayName': 'AngularSP Test List'
+        },
+        'AngularSPGridList': {
+            'DisplayName': 'AngularSP Grid List'
+        }
+    };
+    spFormProvider.defineLists(listDefinitions);
+}]);
 ```
 
 ### Loading Module
@@ -80,29 +35,30 @@ angular.module("app", ["angularSP"]);
 ```
 
 ### Injecting Factory
-The "spListFactory" needs to be injected into your controller.
+The "spListProvider" needs to be injected into your controller.
 
 #### Example
 ```
-angular.module("app").controller("ctrl", ["$scope", "spListFactory", function ($scope, spListFactory) { }]);
+angular.module("app").controller("ctrl", ["$scope", "spFormProvider", function ($scope, spFormProvider) { }]);
 ```
 
-### Initializing Factory
-The "spListFactory" needs to be initialized with the list definitions before doing anything else.  The initialization returns a promise that resolves the lists information that is used by the directives.  Generally, you will want to put this on the scope for the directive to pick up.
+### Initializing Provider
+The "spFormProvider" gets initialized injected into the controller.  The injected object contains a promise called "listInformationPromise" that returns the list information once it is retrieved and initialization is complete.  Generally, you will want wait for the "listInformationPromise" promise to return before executing any controller code.
 
 #### Example
 ```
-var initPromise = spListFactory.initFactory(listDefs);
-
-initPromise.then(function (listInfo) {
-	$scope.listsInfo = listsInfo;
-}, function (reason) {
-	$log.error(reason);
-});
+app.controller('testFormController', ['$scope', '$log', 'spFormProvider', function($scope, $log, spFormProvider) {
+	spFormProvider.listInformationPromise.then(function (listsInfo) {
+		$scope.listsInfo = listsInfo;
+		...
+	}, function (reason) {
+		$log.error(reason);
+	});
+}]);
 ```
 
 ### Factory Calls
-Once the factory is initialized, you can use the following methods to interact with your SharePoint lists:
+Once the provider is initialized, you can use the following methods to interact with your SharePoint lists:
 * createListItem(listName, itemProperties)
   * listName is the internal list name which *must* match up with the key for the list in the list definition JSON.
   * itemProperties is an object keyed off from column internal names that *must* match up to those in the list definition JSON.
