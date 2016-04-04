@@ -1,6 +1,8 @@
 # AngularSP
 AngularSP is an Angular module containing a factory and associated directives for interacting with SharePoint.
 
+**WARNING: This version (1.0) will no longer be supported with bugfixes.  A cleaner, easier to use version (1.1) is currently in the works and should be ready for release by 1 May 2016.**
+
 ## Usage
 
 ### Building your List Definition
