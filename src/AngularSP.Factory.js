@@ -793,23 +793,6 @@
             return fieldData;
         }
 
-        function setSiteColumnProperties(columnsInfo, fieldData) {
-            var context = SP.ClientContext.get_current();
-            for (var i = 0; i < fieldData.length; i++) {
-                var field = fieldData[i];
-                var internalName = field.get_internalName();
-                if (columnsInfo[internalName] !== undefined) {
-                    var column = columnsInfo[internalName];
-                    setColumnInfo(column, field, 0);
-                }
-                else {
-                    //Very strange error.
-                    //console.log("Field data mismatch.");
-                    $log.error("Field data mismatch.");
-                }
-            }
-        }
-
         function setColumnInfo(column, field, fieldLookups, lookupCount) {
             var context = SP.ClientContext.get_current();
             column.Title = field.get_title();

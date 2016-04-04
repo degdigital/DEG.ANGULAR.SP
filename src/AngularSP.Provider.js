@@ -19,9 +19,13 @@
     }
 
     function SPForm($q, $log, lists) {
-        //$log.log(lists);
+        var ignoreFields = ['AppAuthor', 'AppEditor', 'FolderChildCount', 'ItemChildCount', 'UniqueId', 'SyncClientId', 'SortBehavior', 'ScopeId', 'ProgId', 'MetaInfo', 'Last_x0020_Modified', 'FileDirRef', 'FSObjType', 'Created_x0020_Date', 'FileRef'];
 
-        this.listInformationPromise = initializeLists();
+        listInformationDeferred = $q.defer();
+
+        this.listInformationPromise = listInformationDeferred.promise;
+            
+        initializeLists();
 
         this.createListItem = createListItem;
         this.createListItems = createListItems;
@@ -34,11 +38,7 @@
 
         function initializeLists() {
 
-            var initDeferred = $q.defer();
-
             readySharePoint(sharePointReady);
-
-            return initDeferred.promise;
 
             function sharePointReady() {
                 var listsArray = [];
@@ -49,56 +49,11 @@
                         listsArray.push(list);
                     }
                 }
-                var listInfoPromise = loadListInformation(listsArray);
+                loadListInformation(listsArray);
 
                 function setDisplayName(listName, list) {
                     if (list.DisplayName === undefined) {
                         list.DisplayName = listName;
-                    }
-                }
-
-                function loadListInformation(listsArray) {
-                    var context;
-                    var list = listsArray.pop();
-                    if (list !== undefined) {
-                        var context = getContext(list);
-                        var spWeb = context.get_web();
-                        var spLists = spWeb.get_lists();
-                        var spList = spLists.getByTitle(list.DisplayName);
-                        var spFields = spList.get_fields();
-                        context.load(spFields);
-                        context.executeQueryAsync(getFieldsSuccess, getFieldsFailure);
-                    }
-                    else {
-                        initDeferred.resolve(lists);
-                    }
-                    
-                    function getFieldsSuccess() {
-                        list.Columns = {};
-                        var hasLookups = false;
-                        var fieldEnum = spFields.getEnumerator();
-                        while (fieldEnum.moveNext()) {
-                            var spField = fieldEnum.get_current();
-                            hasLookups = setColumnInfo(context, list.Columns, spField);
-                        }
-                        if (hasLookups === true) {
-                            context.executeQueryAsync(getLookupsSuccess, getLookupsFailure);
-                        }
-                        else {
-                            loadListInformation(listsArray);
-                        }
-
-                        function getLookupsSuccess() {
-                            setLookupInfo(list.Columns);
-                            loadListInformation(listsArray);
-                        }
-                        function getLookupsFailure(sender, args) {
-                            initDeferred.reject(args.get_message());
-                        }
-                    }
-
-                    function getFieldsFailure(sender, args) {
-                        initDeferred.reject(args.get_message());
                     }
                 }
             }
@@ -134,6 +89,73 @@
 
         /*Private*/
 
+        function loadListInformation(listsArray) {
+            var context = null;
+            var spFields = null;
+            var list = listsArray.pop();
+            if (list !== undefined) {
+                context = getContext(list);
+                var spWeb = context.get_web();
+                var spLists = spWeb.get_lists();
+                var spList = spLists.getByTitle(list.DisplayName);
+                spFields = spList.get_fields();
+                context.load(spFields);
+                context.executeQueryAsync(getFieldsSuccess, getFieldsFailure);
+            }
+            else {
+                listInformationDeferred.resolve(lists);
+            }
+
+            function getFieldsSuccess() {
+                list.Columns = {};
+                var fieldEnum = spFields.getEnumerator();
+                while (fieldEnum.moveNext()) {
+                    var spField = fieldEnum.get_current();
+                    var internalName = spField.get_internalName();
+                    if (ignoreFields.indexOf(internalName) < 0) {
+                        list.Columns[internalName] = {
+                            Field: spField
+                        };
+                        context.load(spField);
+                    }
+                }
+                context.executeQueryAsync(getFieldInformationSuccess, getFieldInformationFailure);
+
+                function getFieldInformationSuccess() {
+                    var hasLookups = false;
+                    for (var columnName in list.Columns) {
+                        if (list.Columns.hasOwnProperty(columnName)) {
+                            var column = list.Columns[columnName];
+                            hasLookups = setColumnInfo(context, column) || hasLookups;
+                        }
+                    }
+                    $log.log(hasLookups);
+                    if (hasLookups === true) {
+                        context.executeQueryAsync(getLookupsSuccess, getLookupsFailure);
+                    }
+                    else {
+                        loadListInformation(listsArray);
+                    }
+
+                    function getLookupsSuccess() {
+                        setLookupInfo(list.Columns);
+                        loadListInformation(listsArray);
+                    }
+                    function getLookupsFailure(sender, args) {
+                        listInformationDeferred.reject(args.get_message());
+                    }
+                }
+
+                function getFieldInformationFailure(sender, args) {
+                    listInformationDeferred.reject(args.get_message());
+                }
+            }
+
+            function getFieldsFailure(sender, args) {
+                listInformationDeferred.reject(args.get_message());
+            }
+        }
+
         function readySharePoint(callback) {
             SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
                 SP.SOD.executeFunc('sp.taxonomy.js', 'SP.Taxonomy.TaxonomySession', function () {
@@ -151,10 +173,9 @@
             }
         }
 
-        function setColumnInfo(context, columns, spField) {
+        function setColumnInfo(context, column) {
             var hasLookups = false;
-            var internalName = spField.get_internalName();
-            var column = columns[internalName] = {};
+            var spField = column.Field;
             column.Title = spField.get_title();
             column.Id = spField.get_id().toString();
             column.IsRequired = spField.get_required();
@@ -177,8 +198,8 @@
                     column.IsRichText = multiLineTextField.get_richText();
                     break;
                 case 4: //datetime field
-                    break
-                case 5: //choice field
+                    break;
+                case 6: //choice field
                     var choiceField = context.castTo(spField, SP.FieldChoice);
                     column.Choices = choiceField.get_choices();
                     column.FillInChoice = choiceField.get_fillInChoice();
@@ -213,7 +234,7 @@
                     column.AllowMultipleValues = userField.get_allowMultipleValues();
                     break;
                 default:
-                    $log.warn('Field ' + column.Title + ' has type ' + column.FieldType + ' which is not supported.')
+                    $log.warn('Field \"' + column.Title + '\" has type \"' + column.FieldType + '\" which is not supported.')
                     break;
             }
             return hasLookups;
@@ -221,7 +242,7 @@
 
         function setLookupInfo(columns) {
             for (var columnName in columns) {
-                if (lists.hasOwnProperty(columnName)) {
+                if (columns.hasOwnProperty(columnName)) {
                     var column = columns[columnName];
                     if (column.SetLookupFunction !== undefined) {
                         column.SetLookupFunction(column);
