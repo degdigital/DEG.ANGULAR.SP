@@ -87,7 +87,7 @@
             }
         }
 
-        function createListItem(listName, itemProps) {
+        function createListItem(listName, itemProperties) {
             var createDeferred = $q.defer();
             //console.log(listName);
             var listInfo;
@@ -557,42 +557,6 @@
             camlQuery.set_viewXml(camlQueryString);
             return camlQuery;
         }
-
-        //function getCamlValueType(columnInfo) {
-        //    switch (columnInfo.Type) {
-        //        case "text":
-
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //        case "":
-        //            break;
-        //    }
-        //}
 
         function getListItemValue(columnInfo, inputValue) {
             var itemValue = null;

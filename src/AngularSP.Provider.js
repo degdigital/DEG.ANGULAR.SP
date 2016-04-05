@@ -21,10 +21,12 @@
     function SPForm($q, $log, lists) {
         var ignoreFields = ['AppAuthor', 'AppEditor', 'FolderChildCount', 'ItemChildCount', 'UniqueId', 'SyncClientId', 'SortBehavior', 'ScopeId', 'ProgId', 'MetaInfo', 'Last_x0020_Modified', 'FileDirRef', 'FSObjType', 'Created_x0020_Date', 'FileRef'];
 
-        listInformationDeferred = $q.defer();
+        var listsInformation = null;
 
-        this.listInformationPromise = listInformationDeferred.promise;
-            
+        listsInformationDeferred = $q.defer();
+
+        this.listsInformationPromise = listsInformationDeferred.promise;
+
         initializeLists();
 
         this.createListItem = createListItem;
@@ -59,35 +61,218 @@
             }
         }
 
-        function createListItem() {
+        function createListItem(listName, itemProperties) {
+            var createDeferred = $q.defer();
+            var listInfo = null;
+            try {
+                listInfo = getListInformation(listName);
+            }
+            catch (e) {
+                createDeferred.reject(e.message);
+                return;
+            }
+            readySharePoint(sharePointReady);
+            return createDeferred.promise;
 
+            function sharePointReady() {
+                var context = getContext(listInfo);
+                var web = context.get_web();
+                var spList = web.get_lists().getByTitle(listInfo.DisplayName);
+                var itemCreationInfo = new SP.ListItemCreationInformation();
+                var spListItem = spList.addItem(itemCreationInfo);
+                
+                try {
+                    setListItemValues(spListItem, listInfo.Columns, itemProperties);
+                }
+                catch (e) {
+                    createDeferred.reject(e.message);
+                    return;
+                }
+                
+                spListItem.update();
+                context.load(spListItem);
+                context.executeQueryAsync(function () {
+                    createDeferred.resolve(spListItem.get_id());
+                }, function (sender, args) {
+                    createDeferred.reject(args.get_message());
+                });
+            }
         }
 
         function createListItems() {
-
+            $log.error("Function not implemented.");
         }
 
-        function getListItem() {
+        function getListItem(listName, itemId) {
+            var listItemDeferred = $q.defer();
+            
+            var listInfo = null;
+            try {
+                listInfo = getListInformation(listName);
+            }
+            catch (e) {
+                listItemDeferred.reject(e.message);
+                return listItemDeferred.promise;
+            }
+            readySharePoint(sharePointReady);
 
+            return listItemDeferred.promise;
+
+            function sharePointReady() {
+                var context = getContext(listInfo);
+                var spWeb = context.get_web();
+                var spList = spWeb.get_lists().getByTitle(listInfo.DisplayName);
+                var spItem = spList.getItemById(itemId);
+                context.load(spItem);
+                context.executeQueryAsync(getListItemSuccess, getListItemFailure);
+                
+                function getListItemSuccess() {
+                    var spItemValues = spItem.get_fieldValues();
+                    var inputValues = {};
+                    var peopleLookups = [];
+                    for (var columnName in columns) {
+                        if (columns.hasOwnProperty(columnName)) {
+                            var columnInfo = columns[columnName];
+                            if (spItemValues[columnName] !== undefined) {
+                                var spItemValue = spItemValues[columnName];
+                                if (spItemValue !== null) {
+                                    var inputValue = getInputValue(columnInfo, spItemValue, peopleLookups);
+                                    inputValues[columnName] = inputValue;
+                                }
+                            }
+                        }
+                    }
+                    inputValues.Id = spItemValues.ID;
+                    if (peopleLookups.length > 0) {
+                        context.executeQueryAsync(function () {
+                            peopleLookups.forEach(function (peopleLookup) {
+                                peopleLookup.Callback(peopleLookup.Values, peopleLookup.RawResults);
+                            });
+                            listItemDeferred.resolve(inputValues);
+                        }, function (sender, args) {
+                            listItemDeferred.reject(args.get_message());
+                        });
+                    }
+                    else {
+                        listItemDeferred.resolve(inputValues);
+                    }
+                }
+                function getListItemFailure(sender, args) {
+                    listItemDeferred.reject(args.get_message());
+                }
+            }
         }
 
         function getListItems() {
-
+            $log.error("Function not implemented.");
         }
 
-        function updateListItem() {
+        function updateListItem(listName, itemProperties, overrideConflict) {
+            var updateDeferred = $q.defer();
 
+            var listInfo;
+            if (listsInfo !== undefined) {
+                if (listsInfo[listName] !== undefined) {
+                    listInfo = listsInfo[listName];
+                    SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function () {
+                        SP.SOD.executeFunc('sp.taxonomy.js', 'SP.Taxonomy.TaxonomySession', function () {
+                            SP.SOD.executeFunc('SP.UserProfiles.js', 'SP.UserProfiles.PeopleManager', sharePointReady);
+                        });
+                    });
+                }
+            }
+            else {
+
+            }
+
+            return updateDeferred.promise;
+
+            function sharePointReady() {
+                var listName = listInfo.DisplayName;
+
+                var context = SP.ClientContext.get_current();
+                var web = context.get_web();
+                var spList = web.get_lists().getByTitle(listName);
+                var itemCreationInfo = new SP.ListItemCreationInformation();
+                var listItem = spList.getItemById(itemProps.Id);
+
+                if (overrideConflict) {
+                    context.load(listItem);
+                    context.executeQueryAsync(updateItemValues, function (sender, args) {
+                        updateDeferred.reject(args.get_message());
+                    });
+                }
+                else {
+                    updateItemValues();
+                }
+
+                function updateItemValues() {
+                    var columns = listInfo.Columns;
+                    for (var columnName in columns) {
+                        if (columns.hasOwnProperty(columnName)) {
+                            var columnInfo = columns[columnName];
+                            if (itemProps[columnName] !== undefined) {
+                                var inputValue = itemProps[columnName];
+                                var itemValue = getListItemValue(columnInfo, inputValue);
+                                listItem.set_item(columnName, itemValue);
+                            }
+                        }
+                    }
+                    listItem.update();
+                    context.load(listItem);
+                    context.executeQueryAsync(function () {
+                        updateDeferred.resolve(listItem.get_id());
+                    }, function (sender, args) {
+                        updateDeferred.reject(args.get_message());
+                    });
+                }
+            }
         }
 
-        function deleteListItem() {
+        function deleteListItem(listName, itemId) {
+            var deleteDeferred = $q.defer();
 
+            var listDisplayName = listsInfo[listName].DisplayName;
+
+            var context = SP.ClientContext.get_current();
+            var web = context.get_web();
+            var list = web.get_lists().getByTitle(listDisplayName);
+            var item = list.getItemById(itemId);
+            item.deleteObject();
+            context.executeQueryAsync(success, failure);
+
+            return deleteDeferred.promise;
+
+            function success() {
+                deleteDeferred.resolve();
+            }
+
+            function failure(sender, args) {
+                deleteDeferred.reject(args.get_message());
+            }
         }
 
         function commitListItems() {
-
+            $log.error("Function not implemented.");
         }
 
         /*Private*/
+
+        function AngularSPException(errorMessage) {
+            this.message = errorMessage;
+            this.toString = function () {
+                return this.message;
+            };
+        }
+
+        function getListInformation(listName) {
+            if (listsInformation !== null && listsInformation[listName] !== undefined) {
+                return listsInformation[listName];
+            }
+            else {
+                throw new AngularSPException("List information not initialized.  Either there was an initialization error or you need to wait until the listsInformationPromise is resolved.");
+            }
+        }
 
         function loadListInformation(listsArray) {
             var context = null;
@@ -103,7 +288,8 @@
                 context.executeQueryAsync(getFieldsSuccess, getFieldsFailure);
             }
             else {
-                listInformationDeferred.resolve(lists);
+                listsInformation = lists;
+                listsInformationDeferred.resolve(lists);
             }
 
             function getFieldsSuccess() {
@@ -129,7 +315,6 @@
                             hasLookups = setColumnInfo(context, column) || hasLookups;
                         }
                     }
-                    $log.log(hasLookups);
                     if (hasLookups === true) {
                         context.executeQueryAsync(getLookupsSuccess, getLookupsFailure);
                     }
@@ -142,17 +327,17 @@
                         loadListInformation(listsArray);
                     }
                     function getLookupsFailure(sender, args) {
-                        listInformationDeferred.reject(args.get_message());
+                        listsInformationDeferred.reject(args.get_message());
                     }
                 }
 
                 function getFieldInformationFailure(sender, args) {
-                    listInformationDeferred.reject(args.get_message());
+                    listsInformationDeferred.reject(args.get_message());
                 }
             }
 
             function getFieldsFailure(sender, args) {
-                listInformationDeferred.reject(args.get_message());
+                listsInformationDeferred.reject(args.get_message());
             }
         }
 
@@ -181,6 +366,7 @@
             column.IsRequired = spField.get_required();
             column.SchemaXml = spField.get_schemaXml();
             column.DefaultValue = spField.get_defaultValue();
+            column.IsReadOnly = spField.get_readOnlyField();
             column.Scope = spField.get_scope();
             column.FieldType = spField.get_fieldTypeKind();
             switch (column.FieldType) {
@@ -234,7 +420,7 @@
                     column.AllowMultipleValues = userField.get_allowMultipleValues();
                     break;
                 default:
-                    $log.warn('Field \"' + column.Title + '\" has type \"' + column.FieldType + '\" which is not supported.')
+                    //$log.warn('Field \"' + column.Title + '\" has type \"' + column.FieldType + '\" which is not supported.')
                     break;
             }
             return hasLookups;
@@ -329,6 +515,138 @@
                 column.LookupItemsById[lookupItemId] = lookupItemObj;
                 column.LookupItemsByLabel[lookupItemLabel] = lookupItemObj;
             }
+        }
+
+        function setListItemValues(spListItem, columns, values) {
+            //for (var columnName in listInfo.Columns) {
+            //    if (listInfo.Columns.hasOwnProperty(columnName)) {
+            //        var columnInfo = listInfo.Columns[columnName];
+            //        if (itemProperties[columnName] !== undefined) {
+            //            var inputValue = itemProperties[columnName];
+            //            var itemValue = getListItemValue(columnInfo, inputValue);
+            //            spListItem.set_item(columnName, itemValue);
+            //        }
+            //    }
+            //}
+            for (var columnName in values) {
+                if (values.hasOwnProperty(columnName)) {
+                    if (columns[columnName] !== undefined) {
+                        var columnInfo = columns[columnName];
+                        if (columnInfo.IsReadOnly === false) {
+                            var inputValue = values[columnName];
+                            var itemValue = getListItemValue(columnInfo, inputValue);
+                            spListItem.set_item(columnName, itemValue);
+                        }
+                        else {
+                            throw new AngularSPException("Trying to write to read only field: \'" + columnName + "\'");
+                        }
+                    }
+                    else {
+                        throw new AngularSPException("There is a mismatch between the Item Properties and the List Column Information for field: \'" + columnName + "\'");
+                    }
+                }
+            }
+        }
+
+        function getListItemValue(column, inputValue) {
+            var returnValue = null;
+            switch (column.FieldType) {
+                case 0: //metadata field
+                    if (column.AllowMultipleValues) {
+                        var metadataValues = [];
+                        for (var value in inputValue) {
+                            if (inputValue.hasOwnProperty(value)) {
+                                if (inputValue[value]) {
+                                    var metadataItem = columnInfo.TermsById[value];
+                                    metadataValues.push("-1");
+                                    metadataValues.push(metadataItem.label + "|" + metadataItem.id);
+                                }
+                            }
+                        }
+                        returnValue = metadataValues.join(";#");
+                    }
+                    else {
+                        var metadataItem = column.TermsById[inputValue];
+                        returnValue = metadataItem.label + "|" + metadataItem.id;
+                    }
+                    break;
+                case 2: //single text field
+                    returnValue = inputValue;
+                    break;
+                case 3: //multi text field
+                    returnValue = inputValue;
+                    break;
+                case 4: //datetime field
+                    returnValue = inputValue.toISOString();
+                    break;
+                case 6: //choice field
+                    returnValue = inputValue;
+                    break;
+                case 7: //lookup field
+                    if (column.AllowMultipleValues) {
+                        returnValue = [];
+                        for (var value in inputValue) {
+                            if (inputValue.hasOwnProperty(value)) {
+                                if (inputValue[value]) {
+                                    var lookupValue = new SP.FieldLookupValue();
+                                    lookupValue.set_lookupId(value);
+                                    returnValue.push(lookupValue);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        returnValue = new SP.FieldLookupValue();
+                        returnValue.set_lookupId(inputValue);
+                    }
+                    break;
+                case 8: //boolean field
+                    if (inputValue) {
+                        returnValue = 1;
+                    }
+                    else {
+                        returnValue = 0;
+                    }
+                    break;
+                case 9: //number field
+                    returnValue = inputValue;
+                    break;
+                case 10: //currency field
+                    returnValue = inputValue;
+                    break;
+                case 11: //link field
+                    returnValue = inputValue;
+                    break;
+                case 15: //multiple choice field
+                    returnValue = [];
+                    for (var value in inputValue) {
+                        if (inputValue.hasOwnProperty(value)) {
+                            if (inputValue[value]) {
+                                itemValue.push(value);
+                            }
+                        }
+                    }
+                    break;
+                case 20: //person field
+                    if (column.AllowMultipleValues) {
+                        returnValue = [];
+                        for (var i = 0; i < inputValue.length; i++) {
+                            var person = inputValue[i];
+                            returnValue.push(SP.FieldUserValue.fromUser(person.Key));
+                        }
+                    }
+                    else {
+                        if (inputValue.length > 0) {
+                            var person = inputValue[0];
+                            returnValue = SP.FieldUserValue.fromUser(person.Key);
+                        }
+                    }
+                    break;
+                default:
+                    //$log.warn('Field \"' + column.Title + '\" has type \"' + column.FieldType + '\" which is not supported.')
+                    break;
+            }
+            return returnValue;
         }
     }
 
